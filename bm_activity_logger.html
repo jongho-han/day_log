@@ -1348,10 +1348,35 @@ let currentFilter = 'all';
 let detailEntryIndex = null;
 
 const KEY = 'bm_entries_v1';
-let allEntries = JSON.parse(localStorage.getItem(KEY) || '[]');
+let allEntries = [];
+
+// ── SERVER SYNC ──
+async function loadFromServer() {
+  try {
+    const res = await fetch('/api/entries');
+    if (res.ok) {
+      allEntries = await res.json();
+      localStorage.setItem(KEY, JSON.stringify(allEntries));
+      return;
+    }
+  } catch (e) {}
+  allEntries = JSON.parse(localStorage.getItem(KEY) || '[]');
+}
+
+async function syncToServer() {
+  try {
+    await fetch('/api/entries', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(allEntries)
+    });
+  } catch (e) {}
+  localStorage.setItem(KEY, JSON.stringify(allEntries));
+}
 
 // ── INIT ──
-function init() {
+async function init() {
+  await loadFromServer();
   const days = ['일','월','화','수','목','금','토'];
   const d = today;
   document.getElementById('today-str').textContent =
@@ -1583,7 +1608,7 @@ function updateCount(type) {
 }
 
 // ── SUBMIT ──
-function submitForm(type) {
+async function submitForm(type) {
   const body = document.getElementById(type + '-body');
   const cards = body.querySelectorAll('.entry-card');
   const entries = [];
@@ -1605,7 +1630,7 @@ function submitForm(type) {
   if (!valid) { showToast('⚠️ 방문지점을 입력해주세요'); return; }
   if (entries.length === 0) { showToast('⚠️ 항목을 입력해주세요'); return; }
   allEntries.push.apply(allEntries, entries);
-  localStorage.setItem(KEY, JSON.stringify(allEntries));
+  await syncToServer();
   const typeLabel = type === 'schedule' ? '일정' : '계획';
   document.getElementById('success-icon').textContent  = type === 'schedule' ? '📝' : '📅';
   document.getElementById('success-title').textContent = typeLabel + ' 등록 완료!';
@@ -1885,10 +1910,10 @@ function closeDetail(ev) {
 // ── DELETE ──
 function confirmDelete() { document.getElementById('confirm-overlay').classList.add('visible'); }
 function closeConfirm()  { document.getElementById('confirm-overlay').classList.remove('visible'); }
-function doDelete() {
+async function doDelete() {
   if (detailEntryIndex === null) return;
   allEntries.splice(detailEntryIndex, 1);
-  localStorage.setItem(KEY, JSON.stringify(allEntries));
+  await syncToServer();
   closeConfirm();
   document.getElementById('detail-overlay').classList.remove('visible');
   renderRecords(); renderCalendar(); renderStats(); renderRecent();
