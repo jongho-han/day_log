@@ -8,12 +8,12 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
-    --navy: #0F2440;
-    --navy-mid: #1A3A5C;
-    --navy-light: #2E6DA8;
-    --navy-pale: #E8F0FB;
-    --green: #2D9E6B;
-    --green-pale: #E6F5EE;
+    --navy: #005C51;
+    --navy-mid: #00796B;
+    --navy-light: #00C7A9;
+    --navy-pale: #E0F7F4;
+    --green: #00A896;
+    --green-pale: #DFFAF5;
     --amber: #E8890C;
     --amber-pale: #FEF3E0;
     --red: #D94040;
@@ -742,7 +742,7 @@
   .drawer-item.active::before {
     content: '';
     position: absolute; left: 0; top: 8px; bottom: 8px;
-    width: 3px; background: #4E9EDF;
+    width: 3px; background: #00C7A9;
     border-radius: 0 3px 3px 0;
   }
   .drawer-item-icon {
@@ -806,7 +806,7 @@
     font-family: inherit; padding: 9px 2px;
     cursor: pointer; appearance: none; -webkit-appearance: none; text-align: center;
   }
-  .period-select option { background: #1A3A5C; color: white; }
+  .period-select option { background: #007A6E; color: white; }
   .period-range-arrow {
     color: rgba(255,255,255,0.3); font-size: 13px; flex-shrink: 0;
   }
@@ -858,7 +858,7 @@
     flex-shrink: 0;
     display: flex; align-items: center; gap: 5px;
     padding: 6px 12px; border-radius: var(--radius-sm);
-    background: #1D6F42; color: white;
+    background: #00897B; color: white;
     border: none; font-size: 12px; font-weight: 700;
     font-family: inherit; cursor: pointer;
     transition: opacity 0.12s; white-space: nowrap;
@@ -1055,13 +1055,100 @@
     font-family: inherit;
     cursor: pointer;
   }
+
+  /* ── LOGIN SCREEN ── */
+  #screen-login {
+    background: var(--navy);
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .login-wrap {
+    width: 100%;
+    padding: 40px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .login-logo { font-size: 52px; margin-bottom: 16px; }
+  .login-title { font-size: 24px; font-weight: 700; color: white; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .login-sub { font-size: 14px; color: rgba(255,255,255,0.45); margin-bottom: 36px; }
+  .login-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 28px 24px 24px;
+    width: 100%;
+    max-width: 340px;
+    text-align: left;
+  }
+  .login-label {
+    font-size: 12px; font-weight: 700; color: var(--text-secondary);
+    letter-spacing: 0.5px; display: block; margin-bottom: 8px; text-transform: uppercase;
+  }
+  .login-input {
+    width: 100%;
+    border: 1.5px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--surface);
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+    text-transform: uppercase;
+  }
+  .login-input:focus { border-color: var(--navy-light); background: white; }
+  .login-error { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 16px; }
+  .login-btn {
+    width: 100%; background: var(--navy); color: white;
+    border: none; border-radius: var(--radius-md);
+    padding: 15px; font-size: 15px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer; margin-top: 20px; letter-spacing: -0.3px;
+    transition: opacity 0.15s;
+  }
+  .login-btn:active { opacity: 0.85; }
+
+  /* ── DRAWER USER/LOGOUT ── */
+  .drawer-user-row {
+    display: flex; align-items: center; gap: 8px;
+    color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .drawer-logout-btn {
+    width: 100%; padding: 10px; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6); font-size: 13px;
+    font-family: inherit; cursor: pointer; margin-bottom: 10px;
+    transition: background 0.12s;
+  }
+  .drawer-logout-btn:active { background: rgba(255,255,255,0.16); }
 </style>
 </head>
 <body>
 <div class="app" id="app">
 
+  <!-- ═══════════════════════════════ LOGIN SCREEN ═══════════════════════════════ -->
+  <div class="screen active" id="screen-login">
+    <div class="login-wrap">
+      <div class="login-logo">📋</div>
+      <div class="login-title">BM 영업일지</div>
+      <div class="login-sub">사번을 입력하여 시작하세요</div>
+      <div class="login-card">
+        <label class="login-label">사번</label>
+        <input type="text" class="login-input" id="login-input" placeholder="예) A0000000"
+          maxlength="10" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" />
+        <div class="login-error" id="login-error"></div>
+        <button class="login-btn" onclick="doLogin()">시작하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════ MAIN SCREEN ═══════════════════════════════ -->
-  <div class="screen active" id="screen-main">
+  <div class="screen" id="screen-main">
     <div class="app-header">
       <div class="header-top">
         <button class="hamburger-btn" onclick="openDrawer()" aria-label="메뉴">
@@ -1212,6 +1299,11 @@
       </button>
     </nav>
     <div class="drawer-bottom">
+      <div class="drawer-user-row">
+        <span>👤</span>
+        <span id="drawer-username"></span>
+      </div>
+      <button class="drawer-logout-btn" onclick="logout()">로그아웃</button>
       <div class="drawer-version">기록은 이 기기에 저장됩니다</div>
     </div>
   </div>
@@ -1350,6 +1442,10 @@ let detailEntryIndex = null;
 const KEY = 'bm_entries_v1';
 let allEntries = [];
 
+// ── AUTH ──
+const ALLOWED_USERS = { 'A2993178': '한종호' };
+let currentUser = null;
+
 // ── SERVER SYNC ──
 async function loadFromServer() {
   try {
@@ -1376,18 +1472,61 @@ async function syncToServer() {
 
 // ── INIT ──
 async function init() {
+  const saved = localStorage.getItem('bm_user');
+  if (saved) {
+    try {
+      const u = JSON.parse(saved);
+      if (ALLOWED_USERS[u.id]) currentUser = u;
+    } catch {}
+  }
+  if (!currentUser) return; // 로그인 화면 유지
   await loadFromServer();
+  initMainScreen();
+}
+
+function initMainScreen() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-main').classList.add('active');
   const days = ['일','월','화','수','목','금','토'];
   const d = today;
   document.getElementById('today-str').textContent =
     d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') + ' ' + days[d.getDay()];
-  const hour = d.getHours();
-  document.getElementById('greeting-title').textContent =
-    hour < 12 ? '좋은 아침입니다' : hour < 18 ? '오늘도 수고하세요' : '오늘 하루도 고생하셨습니다';
+  updateUserUI();
   renderCalendar();
   renderStats();
   renderRecent();
   initPeriodSelectors();
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const hour = today.getHours();
+  const greeting = hour < 12 ? '좋은 아침입니다' : hour < 18 ? '오늘도 수고하세요' : '오늘 하루도 고생하셨습니다';
+  document.getElementById('greeting-title').textContent = currentUser.name + '님, ' + greeting;
+  const el = document.getElementById('drawer-username');
+  if (el) el.textContent = currentUser.name;
+}
+
+function doLogin() {
+  const input = document.getElementById('login-input');
+  const errEl = document.getElementById('login-error');
+  const id = input.value.trim().toUpperCase();
+  errEl.textContent = '';
+  if (!id) { errEl.textContent = '사번을 입력해주세요'; return; }
+  if (!ALLOWED_USERS[id]) { errEl.textContent = '등록되지 않은 사번입니다'; input.select(); return; }
+  currentUser = { id: id, name: ALLOWED_USERS[id] };
+  localStorage.setItem('bm_user', JSON.stringify(currentUser));
+  loadFromServer().then(function() { initMainScreen(); });
+}
+
+function logout() {
+  localStorage.removeItem('bm_user');
+  currentUser = null;
+  closeDrawer();
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('login-input').value = '';
+  document.getElementById('login-error').textContent = '';
 }
 
 // ── CALENDAR ──
@@ -1871,7 +2010,8 @@ function downloadExcel() {
   const wb = XLSX.utils.book_new();
   const sheetLabel = s === e ? s : s + '~' + e;
   XLSX.utils.book_append_sheet(wb, ws, sheetLabel.slice(0,31));
-  XLSX.writeFile(wb, 'BM영업일지_' + sheetLabel + '.xlsx');
+  const nameTag = currentUser ? currentUser.name + '_' : '';
+  XLSX.writeFile(wb, 'BM영업일지_' + nameTag + sheetLabel + '.xlsx');
   const dispLabel = s === e ? s : s + ' ~ ' + e;
   showToast('📥 ' + dispLabel + ' 다운로드 완료! (' + entries.length + '건)');
 }
