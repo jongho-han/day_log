@@ -1709,10 +1709,17 @@ function addEntry(type, date) {
     '<select class="date-select" data-field="day">'   + makeOpts(1,31,pd,'일') + '</select>' +
     '</div></div>';
 
+  const bankField = '<div class="field-group"><label class="field-label">은행</label>' +
+    '<select class="text-input" data-field="bank">' +
+    '<option value="">선택 안함</option>' +
+    '<option value="iM뱅크">iM뱅크</option>' +
+    '<option value="KB국민">KB국민</option>' +
+    '</select></div>';
   if (isSchedule) {
     card.innerHTML = '<div class="entry-card-header">' +
       '<div class="entry-card-label"><div class="entry-num-badge">' + countId + '</div>방문 기록</div>' +
       removeBtn + '</div><div class="entry-card-body">' + dateFields +
+      bankField +
       '<div class="field-group"><label class="field-label">방문지점</label>' +
       '<input type="text" class="text-input" data-field="location" placeholder="예) OO 지점" /></div>' +
       '<div class="field-group"><label class="field-label">판매인</label>' +
@@ -1723,6 +1730,7 @@ function addEntry(type, date) {
     card.innerHTML = '<div class="entry-card-header">' +
       '<div class="entry-card-label"><div class="entry-num-badge">' + countId + '</div>방문 계획</div>' +
       removeBtn + '</div><div class="entry-card-body">' + dateFields +
+      bankField +
       '<div class="field-group"><label class="field-label">방문지점</label>' +
       '<input type="text" class="text-input" data-field="location" placeholder="예) OO 지점" /></div></div>';
   }
@@ -1759,7 +1767,8 @@ async function submitForm(type) {
     const dateVal = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
     const location = (card.querySelector('[data-field="location"]').value || '').trim();
     if (!location) { valid = false; card.querySelector('[data-field="location"]').focus(); return; }
-    const entry = { type: type, date: dateVal, location: location, createdAt: new Date().toISOString() };
+    const bank = card.querySelector('[data-field="bank"]').value || '';
+    const entry = { type: type, date: dateVal, location: location, bank: bank, createdAt: new Date().toISOString() };
     if (type === 'schedule') {
       entry.seller  = (card.querySelector('[data-field="seller"]').value || '').trim();
       entry.content = (card.querySelector('[data-field="content"]').value || '').trim();
@@ -1971,7 +1980,10 @@ function renderRecords() {
     const cards = groups[date].map(function(x) {
       const idx = allEntries.indexOf(x);
       const typeLabel = x.type === 'schedule' ? '일정' : '계획';
-      const meta = (x.type === 'schedule' && x.seller) ? x.seller : '';
+      const metaParts = [];
+      if (x.type === 'schedule' && x.seller) metaParts.push(x.seller);
+      if (x.bank) metaParts.push(x.bank);
+      const meta = metaParts.join(' · ');
       const preview = (x.type === 'schedule' && x.content)
         ? '<div class="record-content-preview">' + esc(x.content) + '</div>' : '';
       return '<div class="record-card" onclick="openDetail(' + idx + ')">' +
@@ -1998,20 +2010,29 @@ function downloadExcel() {
 
   const sorted   = entries.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
   const dayNames = ['일','월','화','수','목','금','토'];
-  const wsData   = [['날짜','요일','유형','방문지점','판매인','내용']];
+  const wsData   = [['날짜','요일','유형','은행','방문지점','판매인','내용']];
   sorted.forEach(function(x) {
     const d = new Date(x.date + 'T00:00:00');
     wsData.push([x.date, dayNames[d.getDay()], x.type === 'schedule' ? '일정' : '계획',
-      x.location || '', x.seller || '', x.content || '']);
+      x.bank || '', x.location || '', x.seller || '', x.content || '']);
   });
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:22 },{ wch:14 },{ wch:50 }];
+  ws['!cols'] = [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }];
   const wb = XLSX.utils.book_new();
   const sheetLabel = s === e ? s : s + '~' + e;
   XLSX.utils.book_append_sheet(wb, ws, sheetLabel.slice(0,31));
   const nameTag = currentUser ? currentUser.name + '_' : '';
-  XLSX.writeFile(wb, 'BM영업일지_' + nameTag + sheetLabel + '.xlsx');
+  const filename = 'BM영업일지_' + nameTag + sheetLabel + '.xlsx';
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
   const dispLabel = s === e ? s : s + ' ~ ' + e;
   showToast('📥 ' + dispLabel + ' 다운로드 완료! (' + entries.length + '건)');
 }
@@ -2031,6 +2052,8 @@ function openDetail(idx) {
   document.getElementById('detail-date').textContent =
     parts[0] + '년 ' + parseInt(parts[1]) + '월 ' + parseInt(parts[2]) + '일 (' + dayNames[d.getDay()] + ')';
   let rows = '';
+  rows += '<div class="detail-row"><div class="detail-row-label">은행</div>' +
+    '<div class="detail-row-value' + (x.bank ? '' : ' empty') + '">' + (x.bank || '선택 안함') + '</div></div>';
   if (x.type === 'schedule') {
     rows += '<div class="detail-row"><div class="detail-row-label">판매인</div>' +
       '<div class="detail-row-value' + (x.seller ? '' : ' empty') + '">' + (x.seller || '입력 없음') + '</div></div>';
