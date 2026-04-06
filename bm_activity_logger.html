@@ -1857,7 +1857,8 @@ async function submitForm(type) {
   if (!valid) { showToast('⚠️ 방문지점을 입력해주세요'); return; }
   if (entries.length === 0) { showToast('⚠️ 항목을 입력해주세요'); return; }
   allEntries.push.apply(allEntries, entries);
-  await syncToServer();
+  localStorage.setItem(KEY, JSON.stringify(allEntries)); // 즉시 로컬 저장
+  syncToServer(); // 백그라운드 서버 동기화 (await 제거)
   const typeLabel = type === 'schedule' ? '일정' : '계획';
   document.getElementById('success-icon').textContent  = type === 'schedule' ? '📝' : '📅';
   document.getElementById('success-title').textContent = typeLabel + ' 등록 완료!';
