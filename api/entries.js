@@ -6,7 +6,7 @@ async function readData() {
   try {
     const { blobs } = await list({ prefix: BLOB_PATHNAME });
     if (blobs.length === 0) return [];
-    const res = await fetch(blobs[0].url);
+    const res = await fetch(blobs[0].downloadUrl);
     if (!res.ok) return [];
     return await res.json();
   } catch {
@@ -21,7 +21,7 @@ async function writeData(entries) {
     await del(blobs.map(b => b.url));
   }
   await put(BLOB_PATHNAME, JSON.stringify(entries), {
-    access: 'public',
+    access: 'private',
     contentType: 'application/json',
     addRandomSuffix: false,
   });
