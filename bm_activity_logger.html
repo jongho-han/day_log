@@ -1451,7 +1451,8 @@ async function loadFromServer() {
   try {
     const res = await fetch('/api/entries');
     if (res.ok) {
-      allEntries = await res.json();
+      const all = await res.json();
+      allEntries = all.filter(function(e) { return e.userId === currentUser.id; });
       localStorage.setItem(KEY, JSON.stringify(allEntries));
       return;
     }
@@ -1461,10 +1462,15 @@ async function loadFromServer() {
 
 async function syncToServer() {
   try {
+    const res = await fetch('/api/entries');
+    let allUsersEntries = [];
+    if (res.ok) allUsersEntries = await res.json();
+    const others = allUsersEntries.filter(function(e) { return e.userId !== currentUser.id; });
+    const merged = others.concat(allEntries);
     await fetch('/api/entries', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(allEntries)
+      body: JSON.stringify(merged)
     });
   } catch (e) {}
   localStorage.setItem(KEY, JSON.stringify(allEntries));
@@ -1768,7 +1774,7 @@ async function submitForm(type) {
     const location = (card.querySelector('[data-field="location"]').value || '').trim();
     if (!location) { valid = false; card.querySelector('[data-field="location"]').focus(); return; }
     const bank = card.querySelector('[data-field="bank"]').value || '';
-    const entry = { type: type, date: dateVal, location: location, bank: bank, createdAt: new Date().toISOString() };
+    const entry = { type: type, date: dateVal, location: location, bank: bank, userId: currentUser.id, createdAt: new Date().toISOString() };
     if (type === 'schedule') {
       entry.seller  = (card.querySelector('[data-field="seller"]').value || '').trim();
       entry.content = (card.querySelector('[data-field="content"]').value || '').trim();
