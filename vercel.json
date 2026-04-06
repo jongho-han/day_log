@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "bm_activity_logger.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/entries.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/entries",
+      "dest": "/api/entries.js"
+    },
+    {
+      "src": "/",
+      "dest": "/bm_activity_logger.html"
+    },
+    {
+      "src": "/bm_activity_logger.html",
+      "dest": "/bm_activity_logger.html"
+    }
+  ]
+}
