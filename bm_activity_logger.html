@@ -1126,6 +1126,20 @@
     transition: background 0.12s;
   }
   .drawer-logout-btn:active { background: rgba(255,255,255,0.16); }
+
+  /* ── ADMIN MODE ── */
+  .admin-mode .main-actions { display: none; }
+  .admin-mode .detail-delete-btn { display: none; }
+  #drawer-reg-divider.hidden, #drawer-reg-section.hidden,
+  #drawer-form-schedule.hidden, #drawer-form-plan.hidden { display: none; }
+  .record-user-info {
+    font-size: 11px; color: var(--amber); font-weight: 600; margin-top: 2px;
+  }
+  .admin-badge {
+    background: var(--amber-pale); color: var(--amber);
+    font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    margin-left: 6px; vertical-align: middle;
+  }
 </style>
 </head>
 <body>
@@ -1138,9 +1152,15 @@
       <div class="login-title">BM 영업일지</div>
       <div class="login-sub">사번을 입력하여 시작하세요</div>
       <div class="login-card">
-        <label class="login-label">사번</label>
-        <input type="text" class="login-input" id="login-input" placeholder="예) A0000000"
-          maxlength="10" onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" />
+        <label class="login-label">사번 / 아이디</label>
+        <input type="text" class="login-input" id="login-input" placeholder="예) A0000000 또는 jongho"
+          maxlength="20" onkeydown="if(event.key==='Enter')doLogin()" oninput="onLoginInput()" autocomplete="off" />
+        <div id="login-pw-wrap" style="display:none; margin-top:14px;">
+          <label class="login-label">비밀번호</label>
+          <input type="password" class="login-input" id="login-pw" style="letter-spacing:normal; text-transform:none;"
+            placeholder="비밀번호 입력" maxlength="30"
+            onkeydown="if(event.key==='Enter')doLogin()" autocomplete="off" />
+        </div>
         <div class="login-error" id="login-error"></div>
         <button class="login-btn" onclick="doLogin()">시작하기</button>
       </div>
@@ -1281,16 +1301,16 @@
           <div class="drawer-item-desc">저장된 일정·계획 조회</div>
         </div>
       </button>
-      <div class="drawer-divider"></div>
-      <div class="drawer-section-label">등록</div>
-      <button class="drawer-item" onclick="drawerOpenForm('schedule')">
+      <div class="drawer-divider" id="drawer-reg-divider"></div>
+      <div class="drawer-section-label" id="drawer-reg-section">등록</div>
+      <button class="drawer-item" id="drawer-form-schedule" onclick="drawerOpenForm('schedule')">
         <div class="drawer-item-icon">📝</div>
         <div class="drawer-item-text">
           <div class="drawer-item-title">일정등록</div>
           <div class="drawer-item-desc">방문 활동 기록</div>
         </div>
       </button>
-      <button class="drawer-item" onclick="drawerOpenForm('plan')">
+      <button class="drawer-item" id="drawer-form-plan" onclick="drawerOpenForm('plan')">
         <div class="drawer-item-icon">📅</div>
         <div class="drawer-item-text">
           <div class="drawer-item-title">계획등록</div>
@@ -1444,7 +1464,10 @@ let allEntries = [];
 
 // ── AUTH ──
 const ALLOWED_USERS = { 'A2993178': '한종호', 'A2993128': '전창식', 'A2993282': '신용태', 'A2993171': '이재규', 'A3993063': '원미정', 'A3993252': '신재영' };
+const ADMIN_ID = 'JONGHO';
+const ADMIN_PW = 'jongho1234';
 let currentUser = null;
+function isAdmin() { return currentUser && currentUser.id === ADMIN_ID; }
 
 // ── SERVER SYNC ──
 async function loadFromServer() {
@@ -1452,15 +1475,24 @@ async function loadFromServer() {
     const res = await fetch('/api/entries');
     if (res.ok) {
       const all = await res.json();
-      allEntries = all.filter(function(e) { return e.userId === currentUser.id; });
-      localStorage.setItem(KEY, JSON.stringify(allEntries));
+      if (isAdmin()) {
+        allEntries = all;
+      } else {
+        allEntries = all.filter(function(e) { return e.userId === currentUser.id; });
+        localStorage.setItem(KEY, JSON.stringify(allEntries));
+      }
       return;
     }
   } catch (e) {}
-  allEntries = JSON.parse(localStorage.getItem(KEY) || '[]');
+  if (isAdmin()) {
+    allEntries = [];
+  } else {
+    allEntries = JSON.parse(localStorage.getItem(KEY) || '[]');
+  }
 }
 
 async function syncToServer() {
+  if (isAdmin()) return; // 관리자는 서버 데이터를 직접 수정하지 않음
   try {
     const res = await fetch('/api/entries');
     let allUsersEntries = [];
@@ -1482,7 +1514,7 @@ async function init() {
   if (saved) {
     try {
       const u = JSON.parse(saved);
-      if (ALLOWED_USERS[u.id]) currentUser = u;
+      if (u.id === ADMIN_ID || ALLOWED_USERS[u.id]) currentUser = u;
     } catch {}
   }
   if (!currentUser) return; // 로그인 화면 유지
@@ -1492,7 +1524,23 @@ async function init() {
 
 function initMainScreen() {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
-  document.getElementById('screen-main').classList.add('active');
+  const app = document.getElementById('app');
+  const regIds = ['drawer-reg-divider','drawer-reg-section','drawer-form-schedule','drawer-form-plan'];
+  if (isAdmin()) {
+    app.classList.add('admin-mode');
+    regIds.forEach(function(id){ const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
+    document.getElementById('screen-records').classList.add('active');
+    currentTab = 'records';
+    document.getElementById('drawer-records').classList.add('active');
+    document.getElementById('drawer-home').classList.remove('active');
+  } else {
+    app.classList.remove('admin-mode');
+    regIds.forEach(function(id){ const el = document.getElementById(id); if (el) el.classList.remove('hidden'); });
+    document.getElementById('screen-main').classList.add('active');
+    currentTab = 'home';
+    document.getElementById('drawer-home').classList.add('active');
+    document.getElementById('drawer-records').classList.remove('active');
+  }
   const days = ['일','월','화','수','목','금','토'];
   const d = today;
   document.getElementById('today-str').textContent =
@@ -1502,6 +1550,7 @@ function initMainScreen() {
   renderStats();
   renderRecent();
   initPeriodSelectors();
+  if (isAdmin()) renderRecords();
 }
 
 function updateUserUI() {
@@ -1510,7 +1559,18 @@ function updateUserUI() {
   const greeting = hour < 12 ? '좋은 아침입니다' : hour < 18 ? '오늘도 수고하세요' : '오늘 하루도 고생하셨습니다';
   document.getElementById('greeting-title').textContent = currentUser.name + '님, ' + greeting;
   const el = document.getElementById('drawer-username');
-  if (el) el.textContent = currentUser.name;
+  if (el) el.textContent = isAdmin() ? '관리자 (jongho)' : currentUser.name;
+}
+
+function onLoginInput() {
+  const val = document.getElementById('login-input').value.trim().toUpperCase();
+  const pwWrap = document.getElementById('login-pw-wrap');
+  if (val === ADMIN_ID) {
+    pwWrap.style.display = 'block';
+  } else {
+    pwWrap.style.display = 'none';
+    document.getElementById('login-pw').value = '';
+  }
 }
 
 function doLogin() {
@@ -1519,6 +1579,15 @@ function doLogin() {
   const id = input.value.trim().toUpperCase();
   errEl.textContent = '';
   if (!id) { errEl.textContent = '사번을 입력해주세요'; return; }
+  if (id === ADMIN_ID) {
+    const pw = document.getElementById('login-pw').value;
+    if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
+    if (pw !== ADMIN_PW) { errEl.textContent = '비밀번호가 올바르지 않습니다'; document.getElementById('login-pw').select(); return; }
+    currentUser = { id: ADMIN_ID, name: '관리자' };
+    localStorage.setItem('bm_user', JSON.stringify(currentUser));
+    loadFromServer().then(function() { initMainScreen(); });
+    return;
+  }
   if (!ALLOWED_USERS[id]) { errEl.textContent = '등록되지 않은 사번입니다'; input.select(); return; }
   currentUser = { id: id, name: ALLOWED_USERS[id] };
   localStorage.setItem('bm_user', JSON.stringify(currentUser));
@@ -1528,11 +1597,15 @@ function doLogin() {
 function logout() {
   localStorage.removeItem('bm_user');
   currentUser = null;
+  allEntries = [];
   closeDrawer();
+  document.getElementById('app').classList.remove('admin-mode');
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('screen-login').classList.add('active');
   document.getElementById('login-input').value = '';
   document.getElementById('login-error').textContent = '';
+  document.getElementById('login-pw').value = '';
+  document.getElementById('login-pw-wrap').style.display = 'none';
 }
 
 // ── CALENDAR ──
@@ -1992,11 +2065,13 @@ function renderRecords() {
       const meta = metaParts.join(' · ');
       const preview = (x.type === 'schedule' && x.content)
         ? '<div class="record-content-preview">' + esc(x.content) + '</div>' : '';
+      const userInfo = isAdmin() && x.userId
+        ? '<div class="record-user-info">👤 ' + esc(x.userId) + ' · ' + esc(ALLOWED_USERS[x.userId] || '알수없음') + '</div>' : '';
       return '<div class="record-card" onclick="openDetail(' + idx + ')">' +
         '<div class="record-type-dot ' + x.type + '"></div>' +
         '<div class="record-card-info"><div class="record-location">' + esc(x.location) + '</div>' +
         (meta ? '<div class="record-meta">' + esc(meta) + '</div>' : '') +
-        preview + '</div>' +
+        userInfo + preview + '</div>' +
         '<span class="record-badge ' + x.type + '">' + typeLabel + '</span></div>';
     }).join('');
     html += '<div class="records-date-group">' +
@@ -2016,15 +2091,30 @@ function downloadExcel() {
 
   const sorted   = entries.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
   const dayNames = ['일','월','화','수','목','금','토'];
-  const wsData   = [['날짜','요일','유형','은행','방문지점','판매인','내용']];
-  sorted.forEach(function(x) {
-    const d = new Date(x.date + 'T00:00:00');
-    wsData.push([x.date, dayNames[d.getDay()], x.type === 'schedule' ? '일정' : '계획',
-      x.bank || '', x.location || '', x.seller || '', x.content || '']);
-  });
+  let wsData;
+  if (isAdmin()) {
+    wsData = [['사번','이름','날짜','요일','유형','은행','방문지점','판매인','내용']];
+    sorted.forEach(function(x) {
+      const d = new Date(x.date + 'T00:00:00');
+      wsData.push([x.userId || '', ALLOWED_USERS[x.userId] || '', x.date, dayNames[d.getDay()],
+        x.type === 'schedule' ? '일정' : '계획',
+        x.bank || '', x.location || '', x.seller || '', x.content || '']);
+    });
+  } else {
+    wsData = [['날짜','요일','유형','은행','방문지점','판매인','내용']];
+    sorted.forEach(function(x) {
+      const d = new Date(x.date + 'T00:00:00');
+      wsData.push([x.date, dayNames[d.getDay()], x.type === 'schedule' ? '일정' : '계획',
+        x.bank || '', x.location || '', x.seller || '', x.content || '']);
+    });
+  }
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
-  ws['!cols'] = [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }];
+  if (isAdmin()) {
+    ws['!cols'] = [{ wch:12 },{ wch:10 },{ wch:14 },{ wch:6 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }];
+  } else {
+    ws['!cols'] = [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }];
+  }
   const wb = XLSX.utils.book_new();
   const sheetLabel = s === e ? s : s + '~' + e;
   XLSX.utils.book_append_sheet(wb, ws, sheetLabel.slice(0,31));
