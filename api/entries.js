@@ -1,23 +1,33 @@
-const fs = require('fs');
+const { put, list, del } = require('@vercel/blob');
 
-// Vercel 서버리스: /tmp는 인스턴스 내에서만 유지됩니다.
-// 영구 데이터 공유가 필요하면 Vercel KV 또는 외부 DB를 사용하세요.
-const DATA_FILE = '/tmp/bm_data.json';
+const BLOB_PATHNAME = 'bm-entries.json';
 
-function readData() {
-  if (!fs.existsSync(DATA_FILE)) return [];
+async function readData() {
   try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+    const { blobs } = await list({ prefix: BLOB_PATHNAME });
+    if (blobs.length === 0) return [];
+    const res = await fetch(blobs[0].url);
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
 }
 
-function writeData(entries) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(entries, null, 2), 'utf-8');
+async function writeData(entries) {
+  // 기존 blob 삭제 후 새로 저장 (덮어쓰기)
+  const { blobs } = await list({ prefix: BLOB_PATHNAME });
+  if (blobs.length > 0) {
+    await del(blobs.map(b => b.url));
+  }
+  await put(BLOB_PATHNAME, JSON.stringify(entries), {
+    access: 'public',
+    contentType: 'application/json',
+    addRandomSuffix: false,
+  });
 }
 
-module.exports = function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -27,14 +37,15 @@ module.exports = function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    return res.status(200).json(readData());
+    const data = await readData();
+    return res.status(200).json(data);
   }
 
   if (req.method === 'PUT') {
     if (!Array.isArray(req.body)) {
       return res.status(400).json({ error: 'Array expected' });
     }
-    writeData(req.body);
+    await writeData(req.body);
     return res.status(200).json({ ok: true });
   }
 
