@@ -49,6 +49,7 @@
     flex-direction: column;
     position: relative;
     overflow: hidden;
+    isolation: isolate;
   }
 
   /* ── HEADER ── */
@@ -109,13 +110,15 @@
     display: none;
     flex-direction: column;
     flex: 1;
-    animation: slideIn 0.22s ease-out;
   }
-  .screen.active { display: flex; }
+  .screen.active {
+    display: flex;
+    animation: fadeIn 0.18s ease-out;
+  }
 
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(18px); }
-    to { opacity: 1; transform: translateX(0); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   /* ── MAIN SCREEN ── */
@@ -1742,11 +1745,15 @@ function openForm(type, date) {
   document.getElementById('screen-' + type).classList.add('active');
   if (type === 'schedule') {
     scheduleEntryCount = 0;
-    document.getElementById('schedule-body').innerHTML = '';
+    var sb = document.getElementById('schedule-body');
+    sb.innerHTML = '';
+    sb.scrollTop = 0;
     addEntry('schedule', date);
   } else {
     planEntryCount = 0;
-    document.getElementById('plan-body').innerHTML = '';
+    var pb = document.getElementById('plan-body');
+    pb.innerHTML = '';
+    pb.scrollTop = 0;
     addEntry('plan', date);
   }
 }
@@ -1754,9 +1761,13 @@ function goBack() {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   if (currentTab === 'records') {
     document.getElementById('screen-records').classList.add('active');
+    var rb = document.getElementById('records-body');
+    if (rb) rb.scrollTop = 0;
     renderRecords();
   } else {
     document.getElementById('screen-main').classList.add('active');
+    var mc = document.querySelector('.main-content');
+    if (mc) mc.scrollTop = 0;
   }
 }
 
