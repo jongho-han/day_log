@@ -471,6 +471,8 @@
     flex-direction: column;
     gap: 10px;
     padding-bottom: 100px;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Entry card */
@@ -554,6 +556,7 @@
     appearance: none;
     -webkit-appearance: none;
     transition: border-color 0.15s;
+    touch-action: manipulation;
     outline: none;
   }
   .date-select:focus, .text-input:focus, .textarea-input:focus {
@@ -595,7 +598,8 @@
   /* Form footer */
   .form-footer {
     position: fixed;
-    bottom: 0; left: 50%;
+    bottom: var(--keyboard-inset, 0px);
+    left: 50%;
     transform: translateX(-50%);
     width: 100%;
     max-width: 430px;
@@ -605,6 +609,7 @@
     border-top: 1px solid var(--border);
     padding: 12px 16px 28px;
     z-index: 10;
+    transition: bottom 0.15s ease-out;
   }
   .submit-btn {
     width: 100%;
@@ -2184,6 +2189,36 @@ async function doDelete() {
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+
+// ── KEYBOARD SHAKE FIX ──
+// 키보드 등장 시 하단 버튼 위치 조정 (iOS 오버레이 키보드 대응)
+(function() {
+  if (!window.visualViewport) return;
+  function updateKeyboardInset() {
+    var kb = Math.max(0, window.innerHeight - window.visualViewport.offsetTop - window.visualViewport.height);
+    document.documentElement.style.setProperty('--keyboard-inset', kb + 'px');
+  }
+  window.visualViewport.addEventListener('resize', updateKeyboardInset, { passive: true });
+  window.visualViewport.addEventListener('scroll', updateKeyboardInset, { passive: true });
+  updateKeyboardInset();
+})();
+
+// 이미 포커스된 입력창 내 커서 이동 시 스크롤 잠금 (흔들림 방지)
+(function() {
+  document.addEventListener('touchstart', function(e) {
+    var el = e.target;
+    if ((el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el === document.activeElement) {
+      var fb = el.closest && el.closest('.form-body');
+      if (!fb) return;
+      var st = fb.scrollTop;
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          fb.scrollTop = st;
+        });
+      });
+    }
+  }, { passive: true });
+})();
 
 // ── START ──
 init();
