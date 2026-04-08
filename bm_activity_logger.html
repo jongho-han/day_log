@@ -476,11 +476,10 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 14px 16px;
+    padding: 14px 16px 24px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-bottom: 120px;
   }
 
   /* Entry card */
@@ -605,19 +604,10 @@
 
   /* Form footer */
   .form-footer {
-    position: fixed;
-    bottom: var(--keyboard-inset, 0px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 430px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    flex-shrink: 0;
+    background: var(--card);
     border-top: 1px solid var(--border);
-    padding: 12px 16px 28px;
-    z-index: 10;
-    transition: bottom 0.15s ease-out;
+    padding: 12px 16px 32px;
   }
   .submit-btn {
     width: 100%;
