@@ -1737,20 +1737,27 @@ function renderStats() {
 
 function renderRecent() {
   const list = document.getElementById('recent-list');
-  const recent = allEntries.slice().reverse().slice(0, 6);
+  const total = allEntries.length;
+  const recent = allEntries.map(function(e, i){ return { e: e, i: i }; }).reverse().slice(0, 6);
   if (recent.length === 0) {
     list.innerHTML = '<div class="empty-state">아직 기록된 내용이 없습니다</div>';
     return;
   }
-  list.innerHTML = recent.map(function(e) {
+  list.innerHTML = recent.map(function(item) {
+    const e = item.e, idx = item.i;
     const typeLabel = e.type === 'schedule' ? '일정' : '계획';
     const meta = e.type === 'schedule' ? e.date + (e.seller ? ' · ' + e.seller : '') : e.date;
-    return '<div class="recent-item">' +
+    return '<div class="recent-item" onclick="openDetailFromRecent(' + idx + ')" style="cursor:pointer">' +
       '<div class="recent-dot ' + e.type + '"></div>' +
       '<div class="recent-info"><div class="recent-location">' + esc(e.location) + '</div>' +
       '<div class="recent-meta">' + esc(meta) + '</div></div>' +
       '<span class="recent-type ' + e.type + '">' + typeLabel + '</span></div>';
   }).join('');
+}
+
+function openDetailFromRecent(idx) {
+  // 기록 보기 탭이 아니어도 detail overlay 바로 열기
+  openDetail(idx);
 }
 
 // ── BOTTOM SHEET ──
