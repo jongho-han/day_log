@@ -869,6 +869,17 @@
   }
   .excel-btn:active { opacity: 0.8; }
 
+  .json-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    background: #5C6BC0; color: white;
+    border: none; font-size: 12px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: opacity 0.12s; white-space: nowrap;
+  }
+  .json-btn:active { opacity: 0.8; }
+
   /* Summary bar */
   .records-summary {
     padding: 8px 16px 4px;
@@ -960,11 +971,57 @@
   }
   .detail-type-badge.schedule { background: var(--navy-pale); color: var(--navy-light); }
   .detail-type-badge.plan { background: var(--green-pale); color: var(--green); }
+  .detail-header-btns { display: flex; gap: 6px; align-items: center; }
+  .detail-edit-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 12px;
+    font-size: 12px; color: var(--navy-mid); cursor: pointer; font-family: inherit;
+  }
   .detail-delete-btn {
     background: none; border: 1px solid var(--border);
     border-radius: 8px; padding: 5px 12px;
     font-size: 12px; color: var(--red); cursor: pointer; font-family: inherit;
   }
+
+  /* ── EDIT OVERLAY ── */
+  .edit-overlay {
+    position: fixed; inset: 0;
+    background: rgba(13,27,42,0.65); z-index: 350;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .edit-overlay.visible { opacity: 1; pointer-events: all; }
+  .edit-sheet {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 430px; max-height: 92vh; overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    padding-bottom: calc(32px + var(--keyboard-inset, 0px));
+  }
+  .edit-overlay.visible .edit-sheet { transform: translateY(0); }
+  .edit-sheet-handle {
+    width: 36px; height: 4px; background: var(--border-mid);
+    border-radius: 2px; margin: 12px auto 0;
+  }
+  .edit-sheet-header {
+    padding: 14px 18px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .edit-sheet-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .edit-sheet-close {
+    background: none; border: none; font-size: 20px; color: var(--text-hint);
+    cursor: pointer; line-height: 1; padding: 0 4px;
+  }
+  .edit-sheet-body { padding: 16px 18px 8px; }
+  .edit-save-btn {
+    display: block; width: calc(100% - 36px); margin: 12px 18px 0;
+    padding: 14px; border-radius: var(--radius-md);
+    background: var(--navy); color: white;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    border: none; cursor: pointer; transition: opacity 0.12s;
+  }
+  .edit-save-btn:active { opacity: 0.85; }
   .detail-body { padding: 16px 18px 8px; }
   .detail-location {
     font-size: 20px; font-weight: 700; color: var(--text-primary);
@@ -1375,6 +1432,9 @@
       <button class="excel-btn" onclick="downloadExcel()">
         <span>📥</span> 엑셀
       </button>
+      <button class="json-btn" id="json-backup-btn" onclick="downloadJSON()" style="display:none">
+        <span>💾</span> JSON
+      </button>
     </div>
     <div class="records-summary" id="records-summary"></div>
     <div class="records-body" id="records-body"></div>
@@ -1386,13 +1446,29 @@
       <div class="detail-handle"></div>
       <div class="detail-header">
         <span class="detail-type-badge" id="detail-badge"></span>
-        <button class="detail-delete-btn" onclick="confirmDelete()">🗑 삭제</button>
+        <div class="detail-header-btns">
+          <button class="detail-edit-btn" onclick="openEdit()">✏️ 편집</button>
+          <button class="detail-delete-btn" onclick="confirmDelete()">🗑 삭제</button>
+        </div>
       </div>
       <div class="detail-body">
         <div class="detail-location" id="detail-location"></div>
         <div class="detail-date" id="detail-date"></div>
         <div id="detail-rows"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── EDIT OVERLAY ── -->
+  <div class="edit-overlay" id="edit-overlay">
+    <div class="edit-sheet" id="edit-sheet">
+      <div class="edit-sheet-handle"></div>
+      <div class="edit-sheet-header">
+        <span class="edit-sheet-title">편집</span>
+        <button class="edit-sheet-close" onclick="closeEdit()">×</button>
+      </div>
+      <div class="edit-sheet-body" id="edit-sheet-body"></div>
+      <button class="edit-save-btn" onclick="saveEdit()">저장</button>
     </div>
   </div>
 
@@ -1555,6 +1631,8 @@ function updateUserUI() {
   document.getElementById('greeting-title').textContent = currentUser.name + '님, ' + greeting;
   const el = document.getElementById('drawer-username');
   if (el) el.textContent = isAdmin() ? '관리자' : currentUser.name;
+  const jsonBtn = document.getElementById('json-backup-btn');
+  if (jsonBtn) jsonBtn.style.display = isAdmin() ? 'flex' : 'none';
 }
 
 function onLoginInput() {
@@ -1817,7 +1895,18 @@ function addEntry(type, date) {
   const addBtn = document.createElement('button');
   addBtn.className = 'add-entry-btn';
   addBtn.innerHTML = '<div class="add-plus">+</div> 항목 추가';
-  addBtn.onclick = function() { addEntry(type, null); };
+  addBtn.onclick = function() {
+    var firstCard = body.querySelector('.entry-card');
+    var defaultDate = null;
+    if (firstCard) {
+      defaultDate = {
+        year:  parseInt(firstCard.querySelector('[data-field="year"]').value),
+        month: parseInt(firstCard.querySelector('[data-field="month"]').value),
+        day:   parseInt(firstCard.querySelector('[data-field="day"]').value)
+      };
+    }
+    addEntry(type, defaultDate);
+  };
   body.appendChild(addBtn);
   updateCount(type);
 
@@ -2136,6 +2225,29 @@ function downloadExcel() {
   showToast('📥 ' + dispLabel + ' 다운로드 완료! (' + entries.length + '건)');
 }
 
+// ── JSON BACKUP DOWNLOAD ──
+async function downloadJSON() {
+  try {
+    showToast('⏳ 데이터 불러오는 중...');
+    const res = await fetch('/api/entries');
+    if (!res.ok) throw new Error('서버 오류');
+    const data = await res.json();
+    if (!data.length) { showToast('⚠️ 다운로드할 데이터가 없습니다'); return; }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = 'BM영업일지_백업_' + today + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+    showToast('💾 JSON 백업 완료! (' + data.length + '건)');
+  } catch (e) {
+    showToast('⚠️ 다운로드 실패: ' + e.message);
+  }
+}
+
 // ── DETAIL ──
 function openDetail(idx) {
   detailEntryIndex = idx;
@@ -2167,6 +2279,80 @@ function openDetail(idx) {
 function closeDetail(ev) {
   if (ev && ev.target !== document.getElementById('detail-overlay')) return;
   document.getElementById('detail-overlay').classList.remove('visible');
+}
+
+// ── EDIT ──
+function openEdit() {
+  const x = allEntries[detailEntryIndex];
+  if (!x) return;
+  const [ey, em, ed] = x.date.split('-').map(Number);
+
+  function makeOpts(from, to, cur, unit) {
+    let o = '';
+    for (let v = from; v <= to; v++) {
+      o += '<option value="' + v + '"' + (v === cur ? ' selected' : '') + '>' + v + unit + '</option>';
+    }
+    return o;
+  }
+
+  const dateFields = '<div class="field-group"><label class="field-label">날짜</label>' +
+    '<div class="date-group">' +
+    '<select class="date-select" id="edit-year">'  + makeOpts(2023, 2028, ey, '년') + '</select>' +
+    '<select class="date-select" id="edit-month">' + makeOpts(1, 12, em, '월') + '</select>' +
+    '<select class="date-select" id="edit-day">'   + makeOpts(1, 31, ed, '일') + '</select>' +
+    '</div></div>';
+
+  const bankField = '<div class="field-group"><label class="field-label">은행</label>' +
+    '<select class="text-input" id="edit-bank">' +
+    '<option value="">선택 안함</option>' +
+    '<option value="iM뱅크"' + (x.bank === 'iM뱅크' ? ' selected' : '') + '>iM뱅크</option>' +
+    '<option value="KB국민"' + (x.bank === 'KB국민' ? ' selected' : '') + '>KB국민</option>' +
+    '</select></div>';
+
+  const locationField = '<div class="field-group"><label class="field-label">방문지점</label>' +
+    '<input type="text" class="text-input" id="edit-location" value="' + esc(x.location) + '" placeholder="예) OO 지점" /></div>';
+
+  let extra = '';
+  if (x.type === 'schedule') {
+    extra = '<div class="field-group"><label class="field-label">판매인</label>' +
+      '<input type="text" class="text-input" id="edit-seller" value="' + esc(x.seller || '') + '" placeholder="예) 홍길동" /></div>' +
+      '<div class="field-group"><label class="field-label">내용</label>' +
+      '<textarea class="textarea-input" id="edit-content" placeholder="오늘의 대화 내용 등">' + esc(x.content || '') + '</textarea></div>';
+  }
+
+  document.getElementById('edit-sheet-body').innerHTML = dateFields + bankField + locationField + extra;
+  document.getElementById('edit-overlay').classList.add('visible');
+}
+
+function closeEdit() {
+  document.getElementById('edit-overlay').classList.remove('visible');
+}
+
+async function saveEdit() {
+  const x = allEntries[detailEntryIndex];
+  if (!x) return;
+
+  const year  = document.getElementById('edit-year').value;
+  const month = document.getElementById('edit-month').value;
+  const day   = document.getElementById('edit-day').value;
+  const location = (document.getElementById('edit-location').value || '').trim();
+  if (!location) { showToast('⚠️ 방문지점을 입력해주세요'); document.getElementById('edit-location').focus(); return; }
+
+  x.date     = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+  x.bank     = document.getElementById('edit-bank').value || '';
+  x.location = location;
+  if (x.type === 'schedule') {
+    x.seller  = (document.getElementById('edit-seller').value || '').trim();
+    x.content = (document.getElementById('edit-content').value || '').trim();
+  }
+
+  localStorage.setItem(KEY, JSON.stringify(allEntries));
+  syncToServer();
+  closeEdit();
+  // 디테일 시트 갱신
+  openDetail(detailEntryIndex);
+  renderRecords(); renderCalendar(); renderStats(); renderRecent();
+  showToast('✅ 수정되었습니다');
 }
 
 // ── DELETE ──
