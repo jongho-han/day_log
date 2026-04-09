@@ -771,7 +771,7 @@
     padding: 16px 20px 36px;
     border-top: 1px solid rgba(255,255,255,0.07);
   }
-  .drawer-version { font-size: 11px; color: rgba(255,255,255,0.2); }
+
 
   /* ── RECORDS SCREEN ── */
   #screen-records { background: var(--surface); flex-direction: column; }
@@ -1600,10 +1600,10 @@ function initMainScreen() {
   if (isAdmin()) {
     app.classList.add('admin-mode');
     regIds.forEach(function(id){ const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
-    document.getElementById('screen-records').classList.add('active');
-    currentTab = 'records';
-    document.getElementById('drawer-records').classList.add('active');
-    document.getElementById('drawer-home').classList.remove('active');
+    document.getElementById('screen-main').classList.add('active');
+    currentTab = 'home';
+    document.getElementById('drawer-home').classList.add('active');
+    document.getElementById('drawer-records').classList.remove('active');
   } else {
     app.classList.remove('admin-mode');
     regIds.forEach(function(id){ const el = document.getElementById(id); if (el) el.classList.remove('hidden'); });
@@ -1621,7 +1621,6 @@ function initMainScreen() {
   renderStats();
   renderRecent();
   initPeriodSelectors();
-  if (isAdmin()) renderRecords();
 }
 
 function updateUserUI() {
