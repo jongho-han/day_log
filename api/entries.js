@@ -1,30 +1,35 @@
-const { put, list, del } = require('@vercel/blob');
+const { createClient } = require('@supabase/supabase-js');
 
-const BLOB_PATHNAME = 'bm-entries.json';
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
-async function readData() {
-  try {
-    const { blobs } = await list({ prefix: BLOB_PATHNAME });
-    if (blobs.length === 0) return [];
-    const res = await fetch(blobs[0].url);
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
+function toRow(entry) {
+  return {
+    type: entry.type,
+    date: entry.date,
+    location: entry.location,
+    bank: entry.bank,
+    user_id: entry.userId,
+    created_at: entry.createdAt,
+    seller: entry.seller || null,
+    content: entry.content || null,
+  };
 }
 
-async function writeData(entries) {
-  // 기존 blob 삭제 후 새로 저장 (덮어쓰기)
-  const { blobs } = await list({ prefix: BLOB_PATHNAME });
-  if (blobs.length > 0) {
-    await del(blobs.map(b => b.url));
-  }
-  await put(BLOB_PATHNAME, JSON.stringify(entries), {
-    access: 'public',
-    contentType: 'application/json',
-    addRandomSuffix: false,
-  });
+function toEntry(row) {
+  const entry = {
+    type: row.type,
+    date: row.date,
+    location: row.location,
+    bank: row.bank,
+    userId: row.user_id,
+    createdAt: row.created_at,
+  };
+  if (row.seller) entry.seller = row.seller;
+  if (row.content) entry.content = row.content;
+  return entry;
 }
 
 module.exports = async function handler(req, res) {
@@ -37,15 +42,26 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    const data = await readData();
-    return res.status(200).json(data);
+    const { data, error } = await supabase.from('entries').select();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json((data || []).map(toEntry));
   }
 
   if (req.method === 'PUT') {
     if (!Array.isArray(req.body)) {
       return res.status(400).json({ error: 'Array expected' });
     }
-    await writeData(req.body);
+    const { error: deleteError } = await supabase
+      .from('entries')
+      .delete()
+      .neq('id', 0);
+    if (deleteError) return res.status(500).json({ error: deleteError.message });
+    if (req.body.length > 0) {
+      const { error: insertError } = await supabase
+        .from('entries')
+        .insert(req.body.map(toRow));
+      if (insertError) return res.status(500).json({ error: insertError.message });
+    }
     return res.status(200).json({ ok: true });
   }
 

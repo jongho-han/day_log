@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "type": "schedule",
+    "date": "2026-04-13",
+    "location": "test",
+    "bank": "iM뱅크",
+    "userId": "A2993178",
+    "createdAt": "2026-04-13T09:53:56.614Z",
+    "seller": "testt",
+    "content": "est"
+  }
+]
