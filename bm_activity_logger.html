@@ -869,17 +869,6 @@
   }
   .excel-btn:active { opacity: 0.8; }
 
-  .json-btn {
-    flex-shrink: 0;
-    display: flex; align-items: center; gap: 5px;
-    padding: 6px 12px; border-radius: var(--radius-sm);
-    background: #5C6BC0; color: white;
-    border: none; font-size: 12px; font-weight: 700;
-    font-family: inherit; cursor: pointer;
-    transition: opacity 0.12s; white-space: nowrap;
-  }
-  .json-btn:active { opacity: 0.8; }
-
   /* Summary bar */
   .records-summary {
     padding: 8px 16px 4px;
@@ -1201,6 +1190,113 @@
     font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
     margin-left: 6px; vertical-align: middle;
   }
+
+  /* ── EXCEL UPLOAD ── */
+  .upload-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: var(--radius-sm);
+    background: #EF6C00; color: white;
+    border: none; font-size: 12px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    transition: opacity 0.12s; white-space: nowrap;
+  }
+  .upload-btn:active { opacity: 0.8; }
+
+  .upload-overlay {
+    position: fixed; inset: 0;
+    background: rgba(13,27,42,0.7); z-index: 350;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .upload-overlay.visible { opacity: 1; pointer-events: all; }
+  .upload-sheet {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 430px; max-height: 92vh; overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    padding-bottom: 32px;
+  }
+  .upload-overlay.visible .upload-sheet { transform: translateY(0); }
+  .upload-sheet-handle {
+    width: 36px; height: 4px; background: var(--border-mid);
+    border-radius: 2px; margin: 12px auto 0;
+  }
+  .upload-sheet-header {
+    padding: 14px 18px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .upload-sheet-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .upload-sheet-close {
+    background: none; border: none; font-size: 20px; color: var(--text-hint);
+    cursor: pointer; line-height: 1; padding: 0 4px;
+  }
+  .upload-body { padding: 16px 18px; }
+  .upload-zone {
+    border: 2px dashed var(--border-mid);
+    border-radius: var(--radius-lg);
+    padding: 28px 20px; text-align: center;
+    cursor: pointer; transition: all 0.15s;
+    background: var(--surface);
+  }
+  .upload-zone:active { border-color: var(--navy-light); background: var(--navy-pale); }
+  .upload-zone-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-zone-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+  .upload-zone-desc { font-size: 12px; color: var(--text-hint); line-height: 1.5; }
+  .upload-format-guide {
+    margin-top: 12px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px;
+  }
+  .upload-format-label {
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .upload-format-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .upload-format-table { width: 100%; border-collapse: collapse; font-size: 10px; white-space: nowrap; }
+  .upload-format-table th {
+    background: var(--navy); color: white;
+    padding: 5px 7px; text-align: center; font-weight: 600;
+  }
+  .upload-format-table td {
+    padding: 4px 7px; text-align: center;
+    border: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .upload-format-table tr:nth-child(even) td { background: var(--navy-pale); }
+  .upload-preview { margin-top: 14px; display: none; }
+  .upload-preview-hd {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  }
+  .upload-preview-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .upload-preview-count {
+    font-size: 11px; color: var(--text-hint);
+    background: var(--surface); border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .upload-preview-list { display: flex; flex-direction: column; gap: 5px; max-height: 220px; overflow-y: auto; }
+  .upload-preview-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 12px;
+    display: flex; align-items: flex-start; gap: 8px; font-size: 12px;
+  }
+  .upload-preview-item.err { border-color: var(--red); background: #FFF5F5; }
+  .upload-preview-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .upload-preview-dot.schedule { background: var(--navy-light); }
+  .upload-preview-dot.plan { background: var(--green); }
+  .upload-preview-dot.error { background: var(--red); }
+  .upload-preview-info { flex: 1; min-width: 0; }
+  .upload-preview-loc { font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upload-preview-meta { color: var(--text-hint); margin-top: 2px; font-size: 11px; }
+  .upload-import-btn {
+    width: calc(100% - 36px); margin: 14px 18px 0;
+    padding: 15px; border-radius: var(--radius-md);
+    background: var(--navy); color: white;
+    font-size: 15px; font-weight: 700; font-family: inherit;
+    border: none; cursor: pointer; transition: opacity 0.12s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .upload-import-btn:active { opacity: 0.85; }
+  .upload-import-btn:disabled { background: var(--text-hint); cursor: not-allowed; opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -1378,6 +1474,15 @@
           <div class="drawer-item-desc">방문 계획 입력</div>
         </div>
       </button>
+      <div class="drawer-divider"></div>
+      <div class="drawer-section-label">가져오기</div>
+      <button class="drawer-item" id="drawer-upload" onclick="drawerOpenUpload()">
+        <div class="drawer-item-icon">📤</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">엑셀 업로드</div>
+          <div class="drawer-item-desc">일정·계획 일괄 가져오기</div>
+        </div>
+      </button>
     </nav>
     <div class="drawer-bottom">
       <div class="drawer-user-row">
@@ -1432,8 +1537,8 @@
       <button class="excel-btn" onclick="downloadExcel()">
         <span>📥</span> 엑셀
       </button>
-      <button class="json-btn" id="json-backup-btn" onclick="downloadJSON()" style="display:none">
-        <span>💾</span> JSON
+      <button class="upload-btn" onclick="openUpload()">
+        <span>📤</span> 업로드
       </button>
     </div>
     <div class="records-summary" id="records-summary"></div>
@@ -1519,6 +1624,49 @@
       <div class="success-sub" id="success-sub"></div>
       <div class="success-hint">기록 보기 메뉴에서 조회하거나<br>엑셀로 다운로드할 수 있습니다</div>
       <button class="success-close-btn" onclick="closeSuccess()">확인</button>
+    </div>
+  </div>
+
+  <!-- ── EXCEL UPLOAD OVERLAY ── -->
+  <input type="file" id="excel-upload-input" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)" />
+  <div class="upload-overlay" id="upload-overlay">
+    <div class="upload-sheet">
+      <div class="upload-sheet-handle"></div>
+      <div class="upload-sheet-header">
+        <span class="upload-sheet-title">📤 엑셀 업로드</span>
+        <button class="upload-sheet-close" onclick="closeUpload()">×</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-zone" onclick="triggerUploadInput()">
+          <div class="upload-zone-icon">📂</div>
+          <div class="upload-zone-title">엑셀 파일 선택</div>
+          <div class="upload-zone-desc">.xlsx 파일을 선택하세요<br>다운로드한 양식과 동일한 형식을 지원합니다</div>
+        </div>
+        <div class="upload-format-guide">
+          <div class="upload-format-label">📋 업로드 양식</div>
+          <div class="upload-format-scroll">
+            <table class="upload-format-table">
+              <tr>
+                <th>날짜</th><th>유형</th><th>은행</th><th>방문지점</th><th>판매인</th><th>내용</th>
+              </tr>
+              <tr>
+                <td>2026-04-13</td><td>일정</td><td>iM뱅크</td><td>OO지점</td><td>홍길동</td><td>내용입력</td>
+              </tr>
+              <tr>
+                <td>2026-04-14</td><td>계획</td><td>KB국민</td><td>OO지점</td><td></td><td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="upload-preview" id="upload-preview">
+          <div class="upload-preview-hd">
+            <span class="upload-preview-title">미리보기</span>
+            <span class="upload-preview-count" id="upload-preview-count"></span>
+          </div>
+          <div class="upload-preview-list" id="upload-preview-list"></div>
+        </div>
+      </div>
+      <button class="upload-import-btn" id="upload-import-btn" onclick="confirmImport()" disabled>가져오기</button>
     </div>
   </div>
 
@@ -1630,8 +1778,6 @@ function updateUserUI() {
   document.getElementById('greeting-title').textContent = currentUser.name + '님, ' + greeting;
   const el = document.getElementById('drawer-username');
   if (el) el.textContent = isAdmin() ? '관리자' : currentUser.name;
-  const jsonBtn = document.getElementById('json-backup-btn');
-  if (jsonBtn) jsonBtn.style.display = isAdmin() ? 'flex' : 'none';
 }
 
 function onLoginInput() {
@@ -2231,28 +2377,6 @@ function downloadExcel() {
   showToast('📥 ' + dispLabel + ' 다운로드 완료! (' + entries.length + '건)');
 }
 
-// ── JSON BACKUP DOWNLOAD ──
-async function downloadJSON() {
-  try {
-    showToast('⏳ 데이터 불러오는 중...');
-    const res = await fetch('/api/entries');
-    if (!res.ok) throw new Error('서버 오류');
-    const data = await res.json();
-    if (!data.length) { showToast('⚠️ 다운로드할 데이터가 없습니다'); return; }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const today = new Date().toISOString().slice(0, 10);
-    a.href = url;
-    a.download = 'BM영업일지_백업_' + today + '.json';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
-    showToast('💾 JSON 백업 완료! (' + data.length + '건)');
-  } catch (e) {
-    showToast('⚠️ 다운로드 실패: ' + e.message);
-  }
-}
 
 // ── DETAIL ──
 function openDetail(idx) {
@@ -2408,6 +2532,158 @@ function esc(s) {
     }
   }, { passive: true });
 })();
+
+// ── EXCEL UPLOAD ──
+var pendingUploadEntries = [];
+
+function openUpload() {
+  pendingUploadEntries = [];
+  var previewEl = document.getElementById('upload-preview');
+  if (previewEl) previewEl.style.display = 'none';
+  var importBtn = document.getElementById('upload-import-btn');
+  if (importBtn) { importBtn.disabled = true; importBtn.textContent = '가져오기'; }
+  var inp = document.getElementById('excel-upload-input');
+  if (inp) inp.value = '';
+  document.getElementById('upload-overlay').classList.add('visible');
+}
+
+function closeUpload() {
+  document.getElementById('upload-overlay').classList.remove('visible');
+  pendingUploadEntries = [];
+  var inp = document.getElementById('excel-upload-input');
+  if (inp) inp.value = '';
+}
+
+function triggerUploadInput() {
+  document.getElementById('excel-upload-input').click();
+}
+
+function drawerOpenUpload() {
+  closeDrawer();
+  openUpload();
+}
+
+function handleExcelUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === 'undefined') { showToast('⚠️ 라이브러리 로딩 중. 잠시 후 재시도해주세요.'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var workbook = XLSX.read(data, { type: 'array' });
+      var sheetName = workbook.SheetNames[0];
+      var sheet = workbook.Sheets[sheetName];
+      var rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      if (!rows.length) { showToast('⚠️ 데이터가 없습니다'); return; }
+      parseUploadRows(rows);
+    } catch (err) {
+      showToast('⚠️ 파일을 읽을 수 없습니다');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseUploadRows(rows) {
+  var parsed = [];
+  var isAdminFmt = rows.length > 0 && ('사번' in rows[0] || '이름' in rows[0]);
+  rows.forEach(function(row) {
+    // 날짜 정규화 (Excel 날짜 숫자값, 구분자 변환 등)
+    var rawDate = row['날짜'];
+    var dateStr = '';
+    if (typeof rawDate === 'number') {
+      var d = new Date(Math.round((rawDate - 25569) * 86400 * 1000));
+      dateStr = d.getUTCFullYear() + '-' +
+        String(d.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getUTCDate()).padStart(2, '0');
+    } else {
+      dateStr = String(rawDate || '').trim().replace(/[./]/g, '-');
+      if (/^\d{8}$/.test(dateStr)) {
+        dateStr = dateStr.slice(0,4) + '-' + dateStr.slice(4,6) + '-' + dateStr.slice(6,8);
+      }
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      parsed.push({ error: true, reason: '날짜 형식 오류: ' + String(rawDate || '(없음)') });
+      return;
+    }
+    var typeStr = String(row['유형'] || '').trim();
+    var type = typeStr === '일정' ? 'schedule' : typeStr === '계획' ? 'plan' : null;
+    if (!type) {
+      parsed.push({ error: true, reason: '유형 오류 (일정/계획 중 하나): ' + (typeStr || '(없음)') });
+      return;
+    }
+    var location = String(row['방문지점'] || '').trim();
+    if (!location) {
+      parsed.push({ error: true, reason: '방문지점 필수 (날짜: ' + dateStr + ')' });
+      return;
+    }
+    var bank    = String(row['은행']   || '').trim();
+    var seller  = String(row['판매인'] || '').trim();
+    var content = String(row['내용']   || '').trim();
+    var userId  = currentUser.id;
+    if (isAdmin() && isAdminFmt) {
+      var uploadedId = String(row['사번'] || '').trim().toUpperCase();
+      if (uploadedId && ALLOWED_USERS[uploadedId]) userId = uploadedId;
+    }
+    var entry = { type: type, date: dateStr, location: location, bank: bank, userId: userId, createdAt: new Date().toISOString() };
+    if (type === 'schedule') { entry.seller = seller; entry.content = content; }
+    parsed.push(entry);
+  });
+  var validEntries = parsed.filter(function(e) { return !e.error; });
+  var errEntries   = parsed.filter(function(e) { return e.error; });
+  pendingUploadEntries = validEntries;
+  showUploadPreview(parsed, validEntries.length, errEntries.length);
+}
+
+function showUploadPreview(items, validCount, errCount) {
+  var countEl   = document.getElementById('upload-preview-count');
+  var listEl    = document.getElementById('upload-preview-list');
+  var importBtn = document.getElementById('upload-import-btn');
+  var previewEl = document.getElementById('upload-preview');
+
+  countEl.textContent = '총 ' + items.length + '행 · 유효 ' + validCount + '건' +
+    (errCount ? ' · 오류 ' + errCount + '건' : '');
+
+  var html = items.slice(0, 30).map(function(item) {
+    if (item.error) {
+      return '<div class="upload-preview-item err">' +
+        '<div class="upload-preview-dot error"></div>' +
+        '<div class="upload-preview-info"><div class="upload-preview-loc">⚠ ' + esc(item.reason) + '</div></div></div>';
+    }
+    var meta = [item.date, item.bank, item.type === 'schedule' ? '일정' : '계획'].filter(Boolean).join(' · ');
+    return '<div class="upload-preview-item">' +
+      '<div class="upload-preview-dot ' + item.type + '"></div>' +
+      '<div class="upload-preview-info">' +
+      '<div class="upload-preview-loc">' + esc(item.location) + '</div>' +
+      '<div class="upload-preview-meta">' + esc(meta) + '</div>' +
+      '</div></div>';
+  }).join('');
+  if (items.length > 30) {
+    html += '<div style="text-align:center;padding:8px;font-size:11px;color:var(--text-hint)">... 외 ' + (items.length - 30) + '건</div>';
+  }
+  listEl.innerHTML = html;
+  previewEl.style.display = 'block';
+
+  if (validCount > 0) {
+    importBtn.disabled = false;
+    importBtn.innerHTML = '<span>📥</span> ' + validCount + '건 가져오기';
+  } else {
+    importBtn.disabled = true;
+    importBtn.innerHTML = '가져올 유효한 데이터가 없습니다';
+  }
+}
+
+function confirmImport() {
+  if (!pendingUploadEntries.length) return;
+  var count = pendingUploadEntries.length;
+  allEntries.push.apply(allEntries, pendingUploadEntries);
+  localStorage.setItem(KEY, JSON.stringify(allEntries));
+  syncToServer();
+  closeUpload();
+  renderCalendar(); renderStats(); renderRecent();
+  if (currentTab === 'records') renderRecords();
+  showToast('✅ ' + count + '건을 가져왔습니다');
+}
 
 // ── START ──
 init();
