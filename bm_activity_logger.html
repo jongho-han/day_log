@@ -1690,9 +1690,8 @@ const KEY = 'bm_entries_v1';
 let allEntries = [];
 
 // ── AUTH ──
-const ALLOWED_USERS = { 'A2993178': '한종호', 'A2993128': '전창식', 'A2993282': '신용태', 'A2993171': '이재규', 'A3993063': '원미정', 'A3993252': '신재영' };
-const ADMIN_ID = 'JONGHO';
-const ADMIN_PW = 'jongho1234';
+let ALLOWED_USERS = {};
+let ADMIN_ID = '';
 let currentUser = null;
 function isAdmin() { return currentUser && currentUser.id === ADMIN_ID; }
 
@@ -1739,6 +1738,15 @@ async function syncToServer() {
 async function init() {
   // 자동 로그인 비활성화: 항상 로그인 화면에서 시작
   localStorage.removeItem('bm_user');
+  // 멤버 정보 서버에서 로드
+  try {
+    const res = await fetch('/api/members');
+    if (res.ok) {
+      const data = await res.json();
+      ALLOWED_USERS = data.users || {};
+      ADMIN_ID = data.adminId || '';
+    }
+  } catch (e) {}
 }
 
 function initMainScreen() {
@@ -1791,7 +1799,7 @@ function onLoginInput() {
   }
 }
 
-function doLogin() {
+async function doLogin() {
   const input = document.getElementById('login-input');
   const errEl = document.getElementById('login-error');
   const id = input.value.trim().toUpperCase();
@@ -1800,7 +1808,15 @@ function doLogin() {
   if (id === ADMIN_ID) {
     const pw = document.getElementById('login-pw').value;
     if (!pw) { errEl.textContent = '비밀번호를 입력해주세요'; return; }
-    if (pw !== ADMIN_PW) { errEl.textContent = '비밀번호가 올바르지 않습니다'; document.getElementById('login-pw').select(); return; }
+    try {
+      const res = await fetch('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, pw })
+      });
+      const data = await res.json();
+      if (!data.ok) { errEl.textContent = data.error || '비밀번호가 올바르지 않습니다'; document.getElementById('login-pw').select(); return; }
+    } catch (e) { errEl.textContent = '서버 연결 오류'; return; }
     currentUser = { id: ADMIN_ID, name: '관리자' };
     localStorage.setItem('bm_user', JSON.stringify(currentUser));
     loadFromServer().then(function() { initMainScreen(); });

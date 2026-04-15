@@ -8,9 +8,17 @@
     {
       "src": "api/entries.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/members.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/members",
+      "dest": "/api/members.js"
+    },
     {
       "src": "/api/entries",
       "dest": "/api/entries.js"
