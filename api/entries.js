@@ -9,6 +9,7 @@ function toRow(entry) {
   return {
     type: entry.type,
     date: entry.date,
+    time: entry.time || null,
     location: entry.location,
     bank: entry.bank,
     user_id: entry.userId,
@@ -22,6 +23,7 @@ function toEntry(row) {
   const entry = {
     type: row.type,
     date: row.date,
+    time: row.time || '',
     location: row.location,
     bank: row.bank,
     userId: row.user_id,
