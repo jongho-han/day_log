@@ -20,30 +20,30 @@ export function downloadExcel() {
   let wsData;
 
   if (isAdmin()) {
-    wsData = [['사번', '이름', '날짜', '요일', '시간', '유형', '은행', '방문지점', '판매인', '내용']];
+    wsData = [['사번', '이름', '날짜', '요일', '시간', '유형', '은행', '중요도', '방문지점', '판매인', '내용']];
     sorted.forEach(x => {
       const d = new Date(x.date + 'T00:00:00');
       wsData.push([
         x.userId || '', state.ALLOWED_USERS[x.userId] || '', x.date, DAY_NAMES[d.getDay()],
         x.time || '', x.type === 'schedule' ? '일정' : '계획',
-        x.bank || '', x.location || '', x.seller || '', x.content || '',
+        x.bank || '', x.importance || '', x.location || '', x.seller || '', x.content || '',
       ]);
     });
   } else {
-    wsData = [['날짜', '요일', '시간', '유형', '은행', '방문지점', '판매인', '내용']];
+    wsData = [['날짜', '요일', '시간', '유형', '은행', '중요도', '방문지점', '판매인', '내용']];
     sorted.forEach(x => {
       const d = new Date(x.date + 'T00:00:00');
       wsData.push([
         x.date, DAY_NAMES[d.getDay()], x.time || '', x.type === 'schedule' ? '일정' : '계획',
-        x.bank || '', x.location || '', x.seller || '', x.content || '',
+        x.bank || '', x.importance || '', x.location || '', x.seller || '', x.content || '',
       ]);
     });
   }
 
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   ws['!cols'] = isAdmin()
-    ? [{ wch:12 },{ wch:10 },{ wch:14 },{ wch:6 },{ wch:8 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }]
-    : [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:8 },{ wch:12 },{ wch:22 },{ wch:14 },{ wch:50 }];
+    ? [{ wch:12 },{ wch:10 },{ wch:14 },{ wch:6 },{ wch:8 },{ wch:8 },{ wch:12 },{ wch:8 },{ wch:22 },{ wch:14 },{ wch:50 }]
+    : [{ wch:14 },{ wch:6 },{ wch:8 },{ wch:8 },{ wch:12 },{ wch:8 },{ wch:22 },{ wch:14 },{ wch:50 }];
 
   const wb = XLSX.utils.book_new();
   const sheetLabel = s === e ? s : `${s}~${e}`;
@@ -135,7 +135,9 @@ function parseUploadRows(rows) {
     const location = String(row['방문지점'] || '').trim();
     if (!location) return { error: true, reason: `방문지점 필수 (날짜: ${dateStr})` };
 
-    const bank    = String(row['은행']   || '').trim();
+    const bank       = String(row['은행']   || '').trim();
+    const rawImp     = String(row['중요도'] || '').trim();
+    const importance = ['핵심', '성장', '휴면'].includes(rawImp) ? rawImp : '';
     const seller  = String(row['판매인'] || '').trim();
     const content = String(row['내용']   || '').trim();
     const rawTime = String(row['시간']   || '').trim();
@@ -149,7 +151,7 @@ function parseUploadRows(rows) {
       if (uploadedId && state.ALLOWED_USERS[uploadedId]) userId = uploadedId;
     }
 
-    const entry = { type, date: dateStr, time: timeVal, location, bank, userId, createdAt: new Date().toISOString() };
+    const entry = { type, date: dateStr, time: timeVal, location, bank, importance, userId, createdAt: new Date().toISOString() };
     if (type === 'schedule') { entry.seller = seller; entry.content = content; }
     return entry;
   });

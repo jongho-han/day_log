@@ -12,6 +12,7 @@ function toRow(entry) {
     time: entry.time || null,
     location: entry.location,
     bank: entry.bank,
+    importance: entry.importance || '',
     user_id: entry.userId,
     created_at: entry.createdAt,
     seller: entry.seller || null,
@@ -26,6 +27,7 @@ function toEntry(row) {
     time: row.time || '',
     location: row.location,
     bank: row.bank,
+    importance: row.importance || '',
     userId: row.user_id,
     createdAt: row.created_at,
   };

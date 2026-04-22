@@ -223,6 +223,8 @@ export function renderRecords() {
       if (x.type === 'schedule' && x.seller) metaParts.push(x.seller);
       if (x.bank) metaParts.push(x.bank);
       const meta = metaParts.join(' · ');
+      const impTag = x.importance
+        ? `<span class="imp-tag imp-tag-${x.importance}">${x.importance}</span>` : '';
       const preview = (x.type === 'schedule' && x.content)
         ? `<div class="record-content-preview">${esc(x.content)}</div>` : '';
       const userInfo = isAdmin() && x.userId
@@ -230,7 +232,7 @@ export function renderRecords() {
       return `<div class="record-card" data-idx="${idx}">
         <div class="record-type-dot ${x.type}"></div>
         <div class="record-card-info">
-          <div class="record-location">${esc(x.location)}</div>
+          <div class="record-location">${esc(x.location)}${impTag}</div>
           ${meta ? `<div class="record-meta">${esc(meta)}</div>` : ''}
           ${userInfo}${preview}
         </div>

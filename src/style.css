@@ -1288,3 +1288,26 @@
   }
   .upload-import-btn:active { opacity: 0.85; }
   .upload-import-btn:disabled { background: var(--text-hint); cursor: not-allowed; opacity: 0.7; }
+
+  /* ── IMPORTANCE SELECTOR ── */
+  .importance-group { display: flex; gap: 6px; }
+  .importance-btn {
+    flex: 1; padding: 9px 4px;
+    border: 1.5px solid var(--border-mid); border-radius: var(--radius-sm);
+    background: var(--surface); font-size: 12px; font-weight: 600;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+    color: var(--text-secondary); text-align: center;
+  }
+  .importance-btn:active { opacity: 0.75; }
+  .importance-btn[data-value="핵심"].imp-selected { background: var(--amber-pale); border-color: var(--amber); color: var(--amber); }
+  .importance-btn[data-value="성장"].imp-selected { background: var(--green-pale); border-color: var(--green); color: var(--green); }
+  .importance-btn[data-value="휴면"].imp-selected { background: #ECEEF2; border-color: var(--text-hint); color: var(--text-secondary); }
+
+  /* ── IMPORTANCE TAG (record cards & detail) ── */
+  .imp-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px; vertical-align: middle;
+  }
+  .imp-tag-핵심 { background: var(--amber-pale); color: var(--amber); }
+  .imp-tag-성장 { background: var(--green-pale); color: var(--green); }
+  .imp-tag-휴면 { background: #ECEEF2; color: var(--text-secondary); }

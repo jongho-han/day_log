@@ -1,4 +1,4 @@
-import { state, isAdmin } from './state.js';
+import { state } from './state.js';
 import { esc, makeOpts, DAY_NAMES } from './utils.js';
 import { showToast } from './ui.js';
 import { syncToServer } from './api.js';
@@ -27,6 +27,12 @@ export function openDetail(idx) {
   let rows = `<div class="detail-row">
     <div class="detail-row-label">은행</div>
     <div class="detail-row-value${x.bank ? '' : ' empty'}">${x.bank || '선택 안함'}</div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-row-label">중요도</div>
+    <div class="detail-row-value${x.importance ? '' : ' empty'}">
+      ${x.importance ? `<span class="imp-tag imp-tag-${x.importance}">${x.importance}</span>` : '선택 안함'}
+    </div>
   </div>`;
   if (x.type === 'schedule') {
     rows += `<div class="detail-row">
@@ -101,11 +107,25 @@ export function openEdit() {
         <select class="date-select" id="edit-minute">${minOpts}</select>
       </div></div>
     ${bankField}
+    <div class="field-group"><label class="field-label">중요도</label>
+      <div class="importance-group" id="edit-importance">
+        <button type="button" class="importance-btn${x.importance === '핵심' ? ' imp-selected' : ''}" data-value="핵심">⭐ 핵심</button>
+        <button type="button" class="importance-btn${x.importance === '성장' ? ' imp-selected' : ''}" data-value="성장">📈 성장</button>
+        <button type="button" class="importance-btn${x.importance === '휴면' ? ' imp-selected' : ''}" data-value="휴면">💤 휴면</button>
+      </div></div>
     <div class="field-group"><label class="field-label">방문지점</label>
       <input type="text" class="text-input" id="edit-location" value="${esc(x.location)}" placeholder="예) OO 지점" /></div>
     ${extra}`;
 
   document.getElementById('edit-overlay').classList.add('visible');
+
+  document.getElementById('edit-importance').querySelectorAll('.importance-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isActive = btn.classList.contains('imp-selected');
+      document.getElementById('edit-importance').querySelectorAll('.importance-btn').forEach(b => b.classList.remove('imp-selected'));
+      if (!isActive) btn.classList.add('imp-selected');
+    });
+  });
 }
 
 export function closeEdit() {
@@ -129,8 +149,9 @@ export async function saveEdit() {
   const saveHour = document.getElementById('edit-hour').value;
   const saveMin  = document.getElementById('edit-minute').value;
   x.time     = saveHour !== '' ? `${String(saveHour).padStart(2, '0')}:${String(saveMin).padStart(2, '0')}` : '';
-  x.bank     = document.getElementById('edit-bank').value || '';
-  x.location = location;
+  x.bank       = document.getElementById('edit-bank').value || '';
+  x.importance = document.getElementById('edit-importance')?.querySelector('.imp-selected')?.dataset.value || '';
+  x.location   = location;
   if (x.type === 'schedule') {
     x.seller  = (document.getElementById('edit-seller').value || '').trim();
     x.content = (document.getElementById('edit-content').value || '').trim();

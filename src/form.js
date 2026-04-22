@@ -1,5 +1,5 @@
-import { state, today, isAdmin } from './state.js';
-import { makeOpts, esc } from './utils.js';
+import { state, today } from './state.js';
+import { makeOpts } from './utils.js';
 import { showToast } from './ui.js';
 import { syncToServer } from './api.js';
 import { goBack } from './nav.js';
@@ -59,6 +59,13 @@ export function addEntry(type, date) {
       <option value="KB국민">KB국민</option>
     </select></div>`;
 
+  const importanceField = `<div class="field-group"><label class="field-label">중요도</label>
+    <div class="importance-group" data-field="importance">
+      <button type="button" class="importance-btn" data-value="핵심">⭐ 핵심</button>
+      <button type="button" class="importance-btn" data-value="성장">📈 성장</button>
+      <button type="button" class="importance-btn" data-value="휴면">💤 휴면</button>
+    </div></div>`;
+
   const dateFields = `<div class="field-group"><label class="field-label">날짜</label>
     <div class="date-group">
       <select class="date-select" data-field="year">${makeOpts(2023, 2028, py, '년')}</select>
@@ -86,7 +93,7 @@ export function addEntry(type, date) {
       ${removeBtn}
     </div>
     <div class="entry-card-body">
-      ${dateFields}${timeFields}${bankField}
+      ${dateFields}${timeFields}${bankField}${importanceField}
       <div class="field-group"><label class="field-label">방문지점</label>
         <input type="text" class="text-input" data-field="location" placeholder="예) OO 지점" /></div>
       <div class="field-group"><label class="field-label">판매인</label>
@@ -100,13 +107,22 @@ export function addEntry(type, date) {
       ${removeBtn}
     </div>
     <div class="entry-card-body">
-      ${dateFields}${timeFields}${bankField}
+      ${dateFields}${timeFields}${bankField}${importanceField}
       <div class="field-group"><label class="field-label">방문지점</label>
         <input type="text" class="text-input" data-field="location" placeholder="예) OO 지점" /></div>
     </div>`;
   }
 
   body.appendChild(card);
+
+  // Wire importance toggle buttons
+  card.querySelectorAll('.importance-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isActive = btn.classList.contains('imp-selected');
+      card.querySelectorAll('.importance-btn').forEach(b => b.classList.remove('imp-selected'));
+      if (!isActive) btn.classList.add('imp-selected');
+    });
+  });
 
   const addBtn = document.createElement('button');
   addBtn.className = 'add-entry-btn';
@@ -160,6 +176,7 @@ export async function submitForm(type) {
       return;
     }
     const bank = card.querySelector('[data-field="bank"]').value || '';
+    const importance = card.querySelector('.importance-btn.imp-selected')?.dataset.value || '';
     const hourVal   = card.querySelector('[data-field="hour"]').value;
     const minuteVal = card.querySelector('[data-field="minute"]').value;
     const timeVal   = hourVal !== ''
@@ -171,6 +188,7 @@ export async function submitForm(type) {
       time: timeVal,
       location,
       bank,
+      importance,
       userId: state.currentUser.id,
       createdAt: new Date().toISOString(),
     };
