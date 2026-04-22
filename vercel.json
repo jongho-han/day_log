@@ -1,32 +1,10 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
-    },
-    {
-      "src": "api/entries.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/members.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
   "routes": [
-    {
-      "src": "/api/members",
-      "dest": "/api/members.js"
-    },
-    {
-      "src": "/api/entries",
-      "dest": "/api/entries.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/members", "dest": "/api/members.js" },
+    { "src": "/api/entries", "dest": "/api/entries.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
