@@ -1,3 +1,4 @@
+import './style.css';
 import { state } from './state.js';
 import { init, doLogin, onLoginInput, logout } from './auth.js';
 import { openDrawer, closeDrawer, closeSheet } from './ui.js';
