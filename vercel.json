@@ -5,6 +5,7 @@
   "routes": [
     { "src": "/api/members", "dest": "/api/members.js" },
     { "src": "/api/entries", "dest": "/api/entries.js" },
+    { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
