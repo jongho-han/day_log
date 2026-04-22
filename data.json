@@ -8,5 +8,16 @@
     "createdAt": "2026-04-13T09:53:56.614Z",
     "seller": "testt",
     "content": "est"
+  },
+  {
+    "type": "schedule",
+    "date": "2026-04-15",
+    "time": "14:00",
+    "location": "ㅇㄹㄴㅇㄹ",
+    "bank": "KB국민",
+    "userId": "A2993178",
+    "createdAt": "2026-04-15T10:56:03.232Z",
+    "seller": "ㄴㅇㄹㄴㅇㄹ",
+    "content": "ㄴㅇㄹㄴㅇㄹ"
   }
 ]

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BM 영업일지</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/style.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ═══════════════════════════════ LOGIN SCREEN ═══════════════════════════════ -->
+  <div class="screen active" id="screen-login">
+    <div class="login-wrap">
+      <div class="login-logo">📋</div>
+      <div class="login-title">BM 영업일지</div>
+      <div class="login-sub">사번을 입력하여 시작하세요</div>
+      <div class="login-card">
+        <label class="login-label">사번 / 아이디</label>
+        <input type="text" class="login-input" id="login-input"
+          placeholder="예) A0000000" maxlength="20" autocomplete="off" />
+        <div id="login-pw-wrap" style="display:none; margin-top:14px;">
+          <label class="login-label">비밀번호</label>
+          <input type="password" class="login-input" id="login-pw"
+            style="letter-spacing:normal; text-transform:none;"
+            placeholder="비밀번호 입력" maxlength="30" autocomplete="off" />
+        </div>
+        <div class="login-error" id="login-error"></div>
+        <button class="login-btn" id="login-btn">시작하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ MAIN SCREEN ═══════════════════════════════ -->
+  <div class="screen" id="screen-main">
+    <div class="app-header">
+      <div class="header-top">
+        <button class="hamburger-btn" aria-label="메뉴">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="header-date" id="today-str"></span>
+      </div>
+      <div class="header-title" id="greeting-title">오늘도 수고하세요</div>
+      <div class="header-sub">활동 내역을 기록해 주세요</div>
+    </div>
+
+    <div class="main-content">
+      <!-- Calendar -->
+      <div class="cal-card">
+        <div class="cal-header">
+          <button class="cal-nav-btn" id="cal-prev">‹</button>
+          <span class="cal-title" id="cal-month-title"></span>
+          <button class="cal-nav-btn" id="cal-next">›</button>
+        </div>
+        <div class="cal-body">
+          <div class="cal-weekdays">
+            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card schedule-stat">
+          <div class="stat-icon">📝</div>
+          <div>
+            <div class="stat-num" id="stat-schedule">0</div>
+            <div class="stat-label">이번 달 일정</div>
+          </div>
+        </div>
+        <div class="stat-card plan-stat">
+          <div class="stat-icon">📅</div>
+          <div>
+            <div class="stat-num" id="stat-plan">0</div>
+            <div class="stat-label">이번 달 계획</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="main-actions">
+        <button class="action-btn btn-schedule" id="home-btn-schedule">
+          <div class="action-icon">📝</div>
+          <div>
+            <div class="action-btn-title">일정등록</div>
+            <div class="action-btn-desc">방문 활동과<br>대화 내용 기록</div>
+          </div>
+        </button>
+        <button class="action-btn btn-plan" id="home-btn-plan">
+          <div class="action-icon">📅</div>
+          <div>
+            <div class="action-btn-title">계획등록</div>
+            <div class="action-btn-desc">향후 방문<br>계획 입력</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Recent entries -->
+      <div class="section-header">
+        <span class="section-title">최근 기록</span>
+      </div>
+      <div class="recent-list" id="recent-list">
+        <div class="empty-state">아직 기록된 내용이 없습니다</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCHEDULE SCREEN ═══════════════════════════════ -->
+  <div class="screen" id="screen-schedule">
+    <div class="form-header">
+      <button class="back-btn" id="schedule-back">←</button>
+      <div class="form-header-info">
+        <div class="form-header-title">일정등록</div>
+        <div class="form-header-sub">방문 활동을 기록하세요</div>
+      </div>
+    </div>
+    <div class="form-body" id="schedule-body"></div>
+    <div class="form-footer">
+      <button class="submit-btn" id="schedule-submit">
+        <span>💾</span> 등록하기 <span class="submit-count" id="schedule-count">1건</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ PLAN SCREEN ═══════════════════════════════ -->
+  <div class="screen" id="screen-plan">
+    <div class="form-header">
+      <button class="back-btn" id="plan-back">←</button>
+      <div class="form-header-info">
+        <div class="form-header-title">계획등록</div>
+        <div class="form-header-sub">방문 계획을 입력하세요</div>
+      </div>
+    </div>
+    <div class="form-body" id="plan-body"></div>
+    <div class="form-footer">
+      <button class="submit-btn green" id="plan-submit">
+        <span>💾</span> 등록하기 <span class="submit-count" id="plan-count">1건</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── DRAWER ── -->
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-top">
+      <button class="drawer-close">✕</button>
+      <div class="drawer-app-name">📋 BM 영업일지</div>
+      <div class="drawer-app-sub">영업 활동 기록</div>
+    </div>
+    <nav class="drawer-nav">
+      <div class="drawer-section-label">메뉴</div>
+      <button class="drawer-item active" id="drawer-home">
+        <div class="drawer-item-icon">🏠</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">홈</div>
+          <div class="drawer-item-desc">캘린더 및 현황</div>
+        </div>
+      </button>
+      <button class="drawer-item" id="drawer-records">
+        <div class="drawer-item-icon">📋</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">기록 보기</div>
+          <div class="drawer-item-desc">저장된 일정·계획 조회</div>
+        </div>
+      </button>
+      <div class="drawer-divider" id="drawer-reg-divider"></div>
+      <div class="drawer-section-label" id="drawer-reg-section">등록</div>
+      <button class="drawer-item" id="drawer-form-schedule">
+        <div class="drawer-item-icon">📝</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">일정등록</div>
+          <div class="drawer-item-desc">방문 활동 기록</div>
+        </div>
+      </button>
+      <button class="drawer-item" id="drawer-form-plan">
+        <div class="drawer-item-icon">📅</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">계획등록</div>
+          <div class="drawer-item-desc">방문 계획 입력</div>
+        </div>
+      </button>
+      <div class="drawer-divider"></div>
+      <div class="drawer-section-label">가져오기</div>
+      <button class="drawer-item" id="drawer-upload">
+        <div class="drawer-item-icon">📤</div>
+        <div class="drawer-item-text">
+          <div class="drawer-item-title">엑셀 업로드</div>
+          <div class="drawer-item-desc">일정·계획 일괄 가져오기</div>
+        </div>
+      </button>
+    </nav>
+    <div class="drawer-bottom">
+      <div class="drawer-user-row">
+        <span>👤</span>
+        <span id="drawer-username"></span>
+      </div>
+      <button class="drawer-logout-btn">로그아웃</button>
+    </div>
+  </div>
+
+  <!-- ── RECORDS SCREEN ── -->
+  <div class="screen" id="screen-records">
+    <div class="records-header">
+      <div class="records-header-top">
+        <button class="hamburger-btn" aria-label="메뉴">
+          <span></span><span></span><span></span>
+        </button>
+        <h2>기록 보기</h2>
+      </div>
+      <div class="period-bar">
+        <div class="period-row">
+          <div class="period-group">
+            <span class="period-group-label">시작</span>
+            <select class="period-select" id="period-start-year"></select>
+            <select class="period-select" id="period-start-month"></select>
+            <select class="period-select" id="period-start-day"></select>
+          </div>
+          <span class="period-range-arrow">~</span>
+          <div class="period-group">
+            <span class="period-group-label">종료</span>
+            <select class="period-select" id="period-end-year"></select>
+            <select class="period-select" id="period-end-month"></select>
+            <select class="period-select" id="period-end-day"></select>
+          </div>
+        </div>
+        <div class="period-actions">
+          <button class="period-quick-btn" data-period="today">오늘</button>
+          <button class="period-quick-btn" data-period="this-month">이번달</button>
+          <button class="period-quick-btn" data-period="last-month">지난달</button>
+          <button class="period-quick-btn" data-period="3-months">3개월</button>
+          <button class="period-quick-btn" data-period="this-year">올해</button>
+          <button class="period-search-btn">조회</button>
+        </div>
+      </div>
+    </div>
+    <div class="filter-action-row">
+      <div class="filter-chips-wrap">
+        <button class="filter-chip active" data-filter="all">전체</button>
+        <button class="filter-chip schedule-chip" data-filter="schedule">일정</button>
+        <button class="filter-chip plan-chip" data-filter="plan">계획</button>
+      </div>
+      <button class="excel-btn"><span>📥</span> 엑셀</button>
+      <button class="upload-btn"><span>📤</span> 업로드</button>
+    </div>
+    <div class="records-summary" id="records-summary"></div>
+    <div class="records-body" id="records-body"></div>
+  </div>
+
+  <!-- ── DETAIL OVERLAY ── -->
+  <div class="detail-overlay" id="detail-overlay">
+    <div class="detail-sheet" id="detail-sheet">
+      <div class="detail-handle"></div>
+      <div class="detail-header">
+        <span class="detail-type-badge" id="detail-badge"></span>
+        <div class="detail-header-btns">
+          <button class="detail-edit-btn">✏️ 편집</button>
+          <button class="detail-delete-btn">🗑 삭제</button>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-location" id="detail-location"></div>
+        <div class="detail-date" id="detail-date"></div>
+        <div id="detail-rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EDIT OVERLAY ── -->
+  <div class="edit-overlay" id="edit-overlay">
+    <div class="edit-sheet" id="edit-sheet">
+      <div class="edit-sheet-handle"></div>
+      <div class="edit-sheet-header">
+        <span class="edit-sheet-title">편집</span>
+        <button class="edit-sheet-close">×</button>
+      </div>
+      <div class="edit-sheet-body" id="edit-sheet-body"></div>
+      <button class="edit-save-btn">저장</button>
+    </div>
+  </div>
+
+  <!-- ── CONFIRM DELETE ── -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-card">
+      <div class="confirm-icon">🗑</div>
+      <div class="confirm-title">삭제하시겠어요?</div>
+      <div class="confirm-sub">삭제된 기록은 복구할 수 없습니다.</div>
+      <div class="confirm-btns">
+        <button class="confirm-btn cancel">취소</button>
+        <button class="confirm-btn danger">삭제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM SHEET ── -->
+  <div class="sheet-backdrop" id="sheet-backdrop"></div>
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">등록 유형 선택</div>
+    <div class="sheet-date-label" id="sheet-date-label"></div>
+    <div class="sheet-divider"></div>
+    <div class="sheet-options">
+      <button class="sheet-option-btn opt-schedule">
+        <div class="sheet-opt-icon">📝</div>
+        <div>
+          <div class="sheet-opt-title">일정등록</div>
+          <div class="sheet-opt-desc">방문 활동 및 대화 내용 기록</div>
+        </div>
+      </button>
+      <button class="sheet-option-btn opt-plan">
+        <div class="sheet-opt-icon">📅</div>
+        <div>
+          <div class="sheet-opt-title">계획등록</div>
+          <div class="sheet-opt-desc">향후 방문 계획 입력</div>
+        </div>
+      </button>
+    </div>
+    <button class="sheet-cancel-btn">취소</button>
+  </div>
+
+  <!-- ── SUCCESS OVERLAY ── -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-card">
+      <div class="success-icon" id="success-icon">✅</div>
+      <div class="success-title" id="success-title">등록 완료!</div>
+      <div class="success-sub" id="success-sub"></div>
+      <div class="success-hint">기록 보기 메뉴에서 조회하거나<br>엑셀로 다운로드할 수 있습니다</div>
+      <button class="success-close-btn">확인</button>
+    </div>
+  </div>
+
+  <!-- ── EXCEL UPLOAD OVERLAY ── -->
+  <input type="file" id="excel-upload-input" accept=".xlsx,.xls" style="display:none" />
+  <div class="upload-overlay" id="upload-overlay">
+    <div class="upload-sheet">
+      <div class="upload-sheet-handle"></div>
+      <div class="upload-sheet-header">
+        <span class="upload-sheet-title">📤 엑셀 업로드</span>
+        <button class="upload-sheet-close">×</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-zone">
+          <div class="upload-zone-icon">📂</div>
+          <div class="upload-zone-title">엑셀 파일 선택</div>
+          <div class="upload-zone-desc">.xlsx 파일을 선택하세요<br>다운로드한 양식과 동일한 형식을 지원합니다</div>
+        </div>
+        <div class="upload-format-guide">
+          <div class="upload-format-label">📋 업로드 양식</div>
+          <div class="upload-format-scroll">
+            <table class="upload-format-table">
+              <tr>
+                <th>날짜</th><th>유형</th><th>은행</th><th>방문지점</th><th>판매인</th><th>내용</th>
+              </tr>
+              <tr>
+                <td>2026-04-13</td><td>일정</td><td>iM뱅크</td><td>OO지점</td><td>홍길동</td><td>내용입력</td>
+              </tr>
+              <tr>
+                <td>2026-04-14</td><td>계획</td><td>KB국민</td><td>OO지점</td><td></td><td></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="upload-preview" id="upload-preview">
+          <div class="upload-preview-hd">
+            <span class="upload-preview-title">미리보기</span>
+            <span class="upload-preview-count" id="upload-preview-count"></span>
+          </div>
+          <div class="upload-preview-list" id="upload-preview-list"></div>
+        </div>
+      </div>
+      <button class="upload-import-btn" id="upload-import-btn" disabled>가져오기</button>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div class="toast" id="toast"></div>
+
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
