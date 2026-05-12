@@ -75,7 +75,7 @@ export function openEdit() {
     hourOpts += `<option value="${h}"${h === _eh ? ' selected' : ''}>${h}시</option>`;
   }
   let minOpts = '';
-  for (let m = 0; m <= 59; m++) {
+  for (let m = 0; m <= 50; m += 10) {
     minOpts += `<option value="${m}"${m === _emin ? ' selected' : ''}>${String(m).padStart(2, '0')}분</option>`;
   }
 
