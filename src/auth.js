@@ -10,7 +10,6 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 // ── INIT (load member list) ──
 
 export async function init() {
-  localStorage.removeItem('bm_user');
   try {
     const res = await fetch('/api/members');
     if (res.ok) {
@@ -19,6 +18,21 @@ export async function init() {
       state.ADMIN_ID = data.adminId || '';
     }
   } catch (_) {}
+
+  const saved = localStorage.getItem('bm_user');
+  if (saved) {
+    try {
+      const user = JSON.parse(saved);
+      const valid = user.id === state.ADMIN_ID || !!state.ALLOWED_USERS[user.id];
+      if (valid) {
+        state.currentUser = user;
+        await loadFromServer();
+        initMainScreen();
+        return;
+      }
+    } catch (_) {}
+    localStorage.removeItem('bm_user');
+  }
 }
 
 // ── POST-LOGIN SCREEN SETUP ──
