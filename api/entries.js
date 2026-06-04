@@ -36,6 +36,16 @@ function toEntry(row) {
   return entry;
 }
 
+async function isAdminUser(userId) {
+  if (!userId) return false;
+  const { data } = await supabase
+    .from('members')
+    .select('is_admin')
+    .eq('id', userId)
+    .single();
+  return data?.is_admin === true;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
@@ -46,26 +56,38 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    const { data, error } = await supabase.from('entries').select();
+    const userId = req.query.userId;
+    const admin = await isAdminUser(userId);
+
+    let query = supabase.from('entries').select();
+    if (userId && !admin) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json((data || []).map(toEntry));
   }
 
   if (req.method === 'PUT') {
-    if (!Array.isArray(req.body)) {
-      return res.status(400).json({ error: 'Array expected' });
+    const { userId, entries } = req.body || {};
+    if (!userId || !Array.isArray(entries)) {
+      return res.status(400).json({ error: 'userId and entries array expected' });
     }
+
     const { error: deleteError } = await supabase
       .from('entries')
       .delete()
-      .neq('id', 0);
+      .eq('user_id', userId);
     if (deleteError) return res.status(500).json({ error: deleteError.message });
-    if (req.body.length > 0) {
+
+    if (entries.length > 0) {
       const { error: insertError } = await supabase
         .from('entries')
-        .insert(req.body.map(toRow));
+        .insert(entries.map(toRow));
       if (insertError) return res.status(500).json({ error: insertError.message });
     }
+
     return res.status(200).json({ ok: true });
   }
 
