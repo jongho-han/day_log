@@ -25,11 +25,20 @@ export async function syncToServer() {
     if (res.ok) allUsersEntries = await res.json();
     const others = allUsersEntries.filter(e => e.userId !== state.currentUser.id);
     const merged = [...others, ...state.allEntries];
-    await fetch('/api/entries', {
+    const putRes = await fetch('/api/entries', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(merged),
     });
-  } catch (_) {}
+    if (!putRes.ok) {
+      console.error('syncToServer PUT failed:', putRes.status);
+      localStorage.setItem(state.KEY, JSON.stringify(state.allEntries));
+      return;
+    }
+  } catch (e) {
+    console.error('syncToServer error:', e);
+    localStorage.setItem(state.KEY, JSON.stringify(state.allEntries));
+    return;
+  }
   localStorage.setItem(state.KEY, JSON.stringify(state.allEntries));
 }
