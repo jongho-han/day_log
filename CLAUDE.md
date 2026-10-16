@@ -18,24 +18,25 @@ Environment: `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`, read from `.env.local` (
 
 ## Architecture
 
-**Frontend** — vanilla JS ES modules, no framework. `index.html` contains every screen and overlay as static markup; JS only toggles classes and fills containers via `innerHTML`.
-- `src/main.js` wires all DOM event listeners (mostly event delegation) and boots via `init()` from `auth.js`. New interactive elements are registered here.
-- `src/state.js` is a single shared mutable `state` object (current user, `allEntries`, calendar month, filters). Modules import and mutate it directly.
-- Screens are `.screen` divs; navigation = remove `active` from all, add to one (`nav.js`, `form.js`, `auth.js`). Overlays/sheets show via a `visible` / `open` class.
-- Entries are referenced by **index into `state.allEntries`** (`data-idx` on list items → `openDetail(idx)` → `state.detailEntryIndex`). Anything that reorders or filters must preserve the original index (see `records.js` using `allEntries.indexOf(x)`).
-- Excel import/export uses the global `XLSX` loaded from a CDN `<script>` in `index.html`, not an npm package.
-- Styling lives entirely in `src/style.css` (Toss Design System–style tokens on `:root`). JS-generated markup depends on these class names, so renaming a class means updating both the CSS and the template strings in `form.js`, `detail.js`, `records.js`, `excel.js`.
+**Frontend** — vanilla JS ES modules, no framework. `index.html` holds every screen and overlay as static markup; JS toggles classes and fills containers via `innerHTML`. Layers (`src/`), dependencies point downward only:
+- `main.js` — composition root. Creates repositories → providers → controllers via `create*({ deps })` factories and calls each controller's `bind()`. No module-level singletons; wire new dependencies here.
+- `controllers/` — one per screen/feature (navigator, login, session, home, form, records, detail, excel). Own DOM event binding (mostly delegation) and screen-local UI state. Cross-controller calls are injected callbacks (e.g. `openDetail`, `openForm`, `getFiltered`), not imports.
+- `widgets/` — HTML-string renderers, no state. `entryFields.js` is shared by the register form and the edit sheet (fields addressed by `data-field`).
+- `providers/` — app state. `authProvider` (members, current user, admin) and `entryProvider` (entries list + persistence policy). Controllers re-render by subscribing to `entries.subscribe`, never by calling each other's render.
+- `domain/` — pure rules: entry creation/edit/validation, period calculation, Excel row mapping.
+- `data/` — repositories over `/api/*` and localStorage. `core/` — DOM/date/emitter/viewport helpers.
 
-**Auth & roles** — no real auth. `/api/members` GET returns `{ users: {id: name}, adminId }` from the Supabase `members` table. A regular user logs in by entering a known 사번 (employee ID, uppercased); only the admin ID requires a password (checked by POST `/api/members`). The logged-in user is persisted in `localStorage['bm_user']`. Admin mode (`isAdmin()`) adds `.admin-mode` to `#app`, which hides registration UI via CSS; admins see all users' entries and never sync writes.
+Conventions that span files:
+- Entries are referenced by **index into `entries.all()`** (`data-idx` → `detail.open(idx)`). Filtering/grouping must map back with `entries.indexOf(x)`.
+- User-supplied text must go through `escapeHtml` (`core/dom.js`) in every widget.
+- Excel uses the global `XLSX` from a CDN `<script>` in `index.html`, not an npm package.
+- Styling lives in `src/style.css` (Toss Design System tokens on `:root`); widget markup depends on its class names.
 
-**Data sync** — whole-list replacement, not per-record CRUD:
-- `loadFromServer()` GETs `/api/entries?userId=…`; the server filters to that user unless they are admin. On failure it falls back to `localStorage['bm_entries_v1']`.
-- Every mutation (submit, edit, delete, Excel import) mutates `state.allEntries` then calls `syncToServer()`, which PUTs `{ userId, entries }`. The server **deletes all rows for that user and re-inserts** the list.
-- `api/entries.js` maps between camelCase client entries (`userId`, `createdAt`) and snake_case Supabase rows (`user_id`, `created_at`) via `toRow` / `toEntry`.
+**Auth & roles** — no real auth. GET `/api/members` returns `{ users: {id: name}, adminId }` from the Supabase `members` table. A regular user logs in with a known 사번 (uppercased); only the admin ID needs a password (POST `/api/members`). Session persists in `localStorage['bm_user']`. Admin mode adds `.admin-mode` to `#app` (hides registration UI via CSS); admins see all users' entries and their changes are never persisted.
 
-**Backend — two implementations that have diverged:**
-- `api/*.js` are the Vercel serverless functions used in production (routes in `vercel.json`); both members and entries are backed by Supabase.
-- `server.js` is the local dev server. Its `/api/members` matches production, but its `/api/entries` still reads/writes `data.json` and expects a bare array on PUT, so local saves of the client's `{ userId, entries }` payload return 400. Update both when changing API behavior.
+**Data sync** — whole-list replacement, not per-record CRUD. `entryProvider.load()` GETs `/api/entries?userId=…` (server returns only that user's rows unless admin), falling back to `localStorage['bm_entries_v1']` on failure. Every mutation updates the list, notifies subscribers, then PUTs `{ userId, entries }`; the server **deletes all rows for that user and re-inserts**.
+
+**Backend** — `api/members.js`, `api/entries.js` are Vercel functions (routes in `vercel.json`). Shared code is in `api/_lib/` (underscore = not deployed as a route): Supabase client, CORS/method wrapper, and repositories that map camelCase entries ↔ snake_case rows. `server.js` (local dev) mounts the same handlers on Express, so dev and production behave identically.
 
 ## 커뮤니케이션
 - 사용자가 영어로 물어봐도 한국어로 대답

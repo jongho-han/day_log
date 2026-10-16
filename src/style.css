@@ -457,6 +457,7 @@
     display: flex; flex-direction: column;
   }
   .recent-item {
+    cursor: pointer;
     background: transparent;
     border-radius: var(--radius-md);
     padding: 14px;
@@ -1219,6 +1220,8 @@
   }
   .login-input::placeholder { color: var(--grey-300); font-weight: 500; text-transform: none; }
   .login-input:focus { border-bottom-color: var(--primary); }
+  .login-pw-wrap { margin-top: 14px; }
+  .login-input.is-password { letter-spacing: normal; text-transform: none; }
   .login-error { font-size: 14px; font-weight: 500; color: var(--red); margin-top: 10px; min-height: 20px; }
   .login-btn { margin-top: auto; }
 
@@ -1286,6 +1289,8 @@
   }
   .upload-format-table tr:last-child td { border-bottom: none; }
   .upload-preview { margin-top: 20px; display: none; }
+  .upload-preview.visible { display: block; }
+  .upload-preview-more { text-align: center; padding: 8px; font-size: 13px; color: var(--text-hint); }
   .upload-preview-hd {
     display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
   }

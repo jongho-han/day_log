@@ -21,10 +21,9 @@
         <label class="login-label">사번 / 아이디</label>
         <input type="text" class="login-input" id="login-input"
           placeholder="예) A0000000" maxlength="20" autocomplete="off" />
-        <div id="login-pw-wrap" style="display:none; margin-top:14px;">
+        <div id="login-pw-wrap" class="login-pw-wrap" hidden>
           <label class="login-label">비밀번호</label>
-          <input type="password" class="login-input" id="login-pw"
-            style="letter-spacing:normal; text-transform:none;"
+          <input type="password" class="login-input is-password" id="login-pw"
             placeholder="비밀번호 입력" maxlength="30" autocomplete="off" />
         </div>
         <div class="login-error" id="login-error"></div>
@@ -332,7 +331,7 @@
   </div>
 
   <!-- ── EXCEL UPLOAD OVERLAY ── -->
-  <input type="file" id="excel-upload-input" accept=".xlsx,.xls" style="display:none" />
+  <input type="file" id="excel-upload-input" accept=".xlsx,.xls" hidden />
   <div class="upload-overlay" id="upload-overlay">
     <div class="upload-sheet">
       <div class="upload-sheet-handle"></div>
