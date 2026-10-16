@@ -15,3 +15,7 @@
 ## 2026-10-16 11:01:12 KST
 - 프롬프트: 커밋하고 푸시
 - 작업: 리팩토링 변경분 전체(src 계층 구조, api/_lib, server.js, CLAUDE.md, WORKLOG.md)를 `claude/toss-design-ui-nsr4tw` 브랜치에 커밋·푸시. 푸시 전 키·계정·개인정보 포함 여부 점검
+
+## 2026-10-16 11:02:43 KST
+- 프롬프트: day-log-one.vercel.app 배포
+- 작업: PR #1(claude/toss-design-ui-nsr4tw → main) 생성 후 머지(aa57154). Vercel Git 연동으로 main 운영 배포 진행. PR 미리보기 배포 성공 확인
