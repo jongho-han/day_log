@@ -1,0 +1,11 @@
+// Supabase 클라이언트 (서비스 키, 서버 전용)
+const { createClient } = require('@supabase/supabase-js');
+
+let client = null;
+
+function getSupabase() {
+  if (!client) client = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+  return client;
+}
+
+module.exports = { getSupabase };
