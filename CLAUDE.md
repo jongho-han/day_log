@@ -12,7 +12,7 @@ BM 영업일지 — a mobile-first (max-width 430px) web app for sales staff to 
 - `npm run build` — Vite build to `dist/` (this is also Vercel's build command).
 - `npm run preview` — serve the built output.
 
-There is no test suite or linter configured. Changesets (`.changeset/`) is set up for versioning.
+Package manager is npm (`package-lock.json` only; don't add other lockfiles). There is no test suite or linter configured. Changesets (`.changeset/`) is set up for versioning.
 
 Environment: `SUPABASE_URL` and `SUPABASE_SERVICE_KEY`, read from `.env.local` (gitignored).
 

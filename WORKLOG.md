@@ -27,3 +27,19 @@
 ## 2026-10-16 11:12:49 KST
 - 프롬프트: 커밋하고 푸시
 - 작업: 전 사용자 비밀번호 확인 변경분을 `claude/toss-design-ui-nsr4tw` 브랜치에 커밋·푸시. 푸시 전 키·계정·개인정보 포함 여부 점검
+
+## 2026-10-16 11:13:59 KST
+- 프롬프트: 배포
+- 작업: PR #2(전 사용자 비밀번호 확인) 생성 후 main 머지(c3b31f8). Vercel Git 연동으로 운영 배포 진행. PR 미리보기 배포 성공 확인
+
+## 2026-10-16 11:17:32 KST
+- 프롬프트: npm install / npm run dev
+- 작업: npm install 실행(package-lock.json 갱신, 취약점 28건 보고). 사용자 재요청으로 클라우드 세션에서 npm run dev 실행: API(3001)·Vite(5173) 기동 확인, .env.local 부재로 /api 는 500(supabaseUrl is required)
+
+## 2026-10-16 11:18:48 KST
+- 프롬프트: package-lock.json npm 사용
+- 작업: 패키지 매니저를 npm 으로 통일. pnpm-lock.yaml 삭제, 갱신된 package-lock.json 유지(npm ci 정합 확인), CLAUDE.md 에 npm 사용 명시
+
+## 2026-10-16 11:19:24 KST
+- 프롬프트: 개발 서버 끄고 커밋하고 푸시
+- 작업: 개발 서버 종료. 브랜치를 최신 main 에서 재시작 후 npm 통일(pnpm-lock.yaml 삭제, package-lock.json 갱신)·CLAUDE.md·WORKLOG 변경분 커밋·푸시
