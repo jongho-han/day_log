@@ -7,10 +7,10 @@ async function listMembers() {
   return data || [];
 }
 
-async function findAdminPassword(id) {
-  const { data, error } = await getSupabase()
-    .from('members').select('pw').eq('id', id).eq('is_admin', true).single();
-  return error || !data ? null : data.pw;
+// 비밀번호 미설정(null/빈 값) 회원은 로그인 불가
+async function findPassword(id) {
+  const { data, error } = await getSupabase().from('members').select('pw').eq('id', id).single();
+  return error || !data?.pw ? null : data.pw;
 }
 
 async function isAdmin(userId) {
@@ -19,4 +19,4 @@ async function isAdmin(userId) {
   return data?.is_admin === true;
 }
 
-module.exports = { listMembers, findAdminPassword, isAdmin };
+module.exports = { listMembers, findPassword, isAdmin };

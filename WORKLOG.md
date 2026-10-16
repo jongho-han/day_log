@@ -19,3 +19,11 @@
 ## 2026-10-16 11:02:43 KST
 - 프롬프트: day-log-one.vercel.app 배포
 - 작업: PR #1(claude/toss-design-ui-nsr4tw → main) 생성 후 머지(aa57154). Vercel Git 연동으로 main 운영 배포 진행. PR 미리보기 배포 성공 확인
+
+## 2026-10-16 11:09:12 KST
+- 프롬프트: 모든 사용자 로그인 시 pw 체크
+- 작업: 관리자만 하던 비밀번호 확인을 모든 회원으로 확대. POST /api/members 가 members.pw 로 모든 회원 확인(비밀번호 미설정 회원은 로그인 불가). 로그인 화면 비밀번호 입력 상시 노출, authProvider·loginController 정리, CLAUDE.md 인증 설명 갱신. 빌드·로그인 로직·API 스텁 검증 통과. 커밋 안 함
+
+## 2026-10-16 11:12:49 KST
+- 프롬프트: 커밋하고 푸시
+- 작업: 전 사용자 비밀번호 확인 변경분을 `claude/toss-design-ui-nsr4tw` 브랜치에 커밋·푸시. 푸시 전 키·계정·개인정보 포함 여부 점검

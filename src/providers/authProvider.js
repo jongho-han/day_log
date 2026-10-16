@@ -1,4 +1,4 @@
-// 로그인 상태·사용자 목록 관리 (실제 인증 없음: 사번 확인, 관리자만 비밀번호)
+// 로그인 상태·사용자 목록 관리 (사번 + 비밀번호 확인, 세션 토큰은 없음)
 
 export function createAuthProvider({ memberRepository, sessionRepository }) {
   let users = {};
@@ -17,7 +17,6 @@ export function createAuthProvider({ memberRepository, sessionRepository }) {
     get currentUser() { return currentUser; },
 
     isAdmin: () => !!currentUser && isAdminId(currentUser.id),
-    requiresPassword: (id) => isAdminId(id),
     isKnownUser: (id) => !!users[id],
     userName: (id) => users[id] || '',
 
@@ -44,23 +43,19 @@ export function createAuthProvider({ memberRepository, sessionRepository }) {
     async login(rawId, pw) {
       const id = rawId.trim().toUpperCase();
       if (!id) return { ok: false, error: '사번을 입력해주세요' };
+      if (!isAdminId(id) && !users[id]) return { ok: false, error: '등록되지 않은 사번입니다', selectField: 'id' };
+      if (!pw) return { ok: false, error: '비밀번호를 입력해주세요' };
 
-      if (isAdminId(id)) {
-        if (!pw) return { ok: false, error: '비밀번호를 입력해주세요' };
-        let result;
-        try {
-          result = await memberRepository.verifyAdmin(id, pw);
-        } catch (_) {
-          return { ok: false, error: '서버 연결 오류' };
-        }
-        if (!result.ok) {
-          return { ok: false, error: result.error || '비밀번호가 올바르지 않습니다', selectField: 'pw' };
-        }
-        return signIn({ id, name: '관리자' });
+      let result;
+      try {
+        result = await memberRepository.verifyPassword(id, pw);
+      } catch (_) {
+        return { ok: false, error: '서버 연결 오류' };
       }
-
-      if (!users[id]) return { ok: false, error: '등록되지 않은 사번입니다', selectField: 'id' };
-      return signIn({ id, name: users[id] });
+      if (!result.ok) {
+        return { ok: false, error: result.error || '비밀번호가 올바르지 않습니다', selectField: 'pw' };
+      }
+      return signIn({ id, name: isAdminId(id) ? '관리자' : users[id] });
     },
 
     logout() {

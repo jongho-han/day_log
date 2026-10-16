@@ -1,4 +1,4 @@
-// 사용자 목록·관리자 인증 (/api/members)
+// 사용자 목록·로그인 비밀번호 확인 (/api/members)
 
 export function createMemberRepository({ http }) {
   return {
@@ -10,7 +10,7 @@ export function createMemberRepository({ http }) {
     },
 
     // → { ok, error }
-    async verifyAdmin(id, pw) {
+    async verifyPassword(id, pw) {
       const res = await http.post('/api/members', { id, pw });
       return { ok: !!res.data?.ok, error: res.data?.error };
     },
