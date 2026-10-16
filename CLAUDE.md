@@ -32,7 +32,7 @@ Conventions that span files:
 - Excel uses the global `XLSX` from a CDN `<script>` in `index.html`, not an npm package.
 - Styling lives in `src/style.css` (Toss Design System tokens on `:root`); widget markup depends on its class names.
 
-**Auth & roles** — no real auth. GET `/api/members` returns `{ users: {id: name}, adminId }` from the Supabase `members` table. A regular user logs in with a known 사번 (uppercased); only the admin ID needs a password (POST `/api/members`). Session persists in `localStorage['bm_user']`. Admin mode adds `.admin-mode` to `#app` (hides registration UI via CSS); admins see all users' entries and their changes are never persisted.
+**Auth & roles** — no session token. GET `/api/members` returns `{ users: {id: name}, adminId }` from the Supabase `members` table. Every user (admin included) logs in with 사번 (uppercased) + password, checked by POST `/api/members` against `members.pw`; members with an empty `pw` cannot log in. Session persists in `localStorage['bm_user']`. Admin mode adds `.admin-mode` to `#app` (hides registration UI via CSS); admins see all users' entries and their changes are never persisted.
 
 **Data sync** — whole-list replacement, not per-record CRUD. `entryProvider.load()` GETs `/api/entries?userId=…` (server returns only that user's rows unless admin), falling back to `localStorage['bm_entries_v1']` on failure. Every mutation updates the list, notifies subscribers, then PUTs `{ userId, entries }`; the server **deletes all rows for that user and re-inserts**.
 
